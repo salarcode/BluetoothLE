@@ -1,0 +1,67 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFrameworks>net10.0-android</TargetFrameworks>
+		<TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('osx'))">$(TargetFrameworks);net10.0-ios</TargetFrameworks>
+		<TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net10.0-windows10.0.19041.0</TargetFrameworks>
+		<OutputType>Exe</OutputType>
+		<RootNamespace>BleDemo.Maui</RootNamespace>
+		<AssemblyName>BleDemo.Maui</AssemblyName>
+		<UseMaui>true</UseMaui>
+		<SingleProject>true</SingleProject>
+		<Nullable>enable</Nullable>
+		<LangVersion>latest</LangVersion>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<IsTrimmable>false</IsTrimmable>
+
+		<MauiXamlInflator>SourceGen</MauiXamlInflator>
+		<ApplicationTitle>BleDemo.Maui</ApplicationTitle>
+		<ApplicationId>com.salarwtg.ble.demo.maui</ApplicationId>
+		<ApplicationIdGuid>8292884B-6628-4EE4-AE5D-BDFA2B2CBFE3</ApplicationIdGuid>
+		
+		<ApplicationDisplayVersion>1.0</ApplicationDisplayVersion>
+		<ApplicationVersion>1</ApplicationVersion>
+
+		<WindowsPackageType>None</WindowsPackageType>
+		<!--warning MA002: Starting with .NET 8, setting  <UseMaui>true</UseMaui>  does not automatically include NuGet package references in your project. Use SkipValidateMauiImplicitPackageReferences to skip the warning-->
+		<SkipValidateMauiImplicitPackageReferences>true</SkipValidateMauiImplicitPackageReferences>
+
+		<Description>.NET MAUI BLE demo for scanning and connecting to real devices</Description>
+		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">15.0</SupportedOSPlatformVersion>
+		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'maccatalyst'">15.0</SupportedOSPlatformVersion>
+		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">26.0</SupportedOSPlatformVersion>
+		<SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</SupportedOSPlatformVersion>
+		<TargetPlatformMinVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">10.0.17763.0</TargetPlatformMinVersion>
+		<EnableWindowsTargeting Condition="!$([MSBuild]::IsOSPlatform('windows'))">true</EnableWindowsTargeting>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<MauiIcon Include="Resources\appicon.svg" ForegroundFile="Resources\appiconfg.svg" Color="#512BD4" />
+		<MauiSplashScreen Include="Resources\appiconfg.svg" Color="#512BD4" BaseSize="128,128" />
+		<MauiImage Include="Resources\Images\*" />
+		<MauiImage Update="Resources\Images\dotnet_bot.svg" BaseSize="168,208" />
+		<MauiFont Include="Resources\Fonts\*" />
+		<MauiAsset Include="Resources\Raw\**" LogicalName="%(RecursiveDir)%(Filename)%(Extension)" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.Maui.Controls" Version="$(MauiVersion)" />
+		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="10.0.0" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<ProjectReference Include="..\..\src\Salar.BluetoothLE.Core\Salar.BluetoothLE.Core.csproj" />
+		<ProjectReference Include="..\..\src\Salar.BluetoothLE.Maui\Salar.BluetoothLE.Maui.csproj" />
+	</ItemGroup>
+
+	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
+		<ProjectReference Include="..\..\src\Salar.BluetoothLE.Android\Salar.BluetoothLE.Android.csproj" />
+	</ItemGroup>
+
+	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">
+		<ProjectReference Include="..\..\src\Salar.BluetoothLE.iOS\Salar.BluetoothLE.iOS.csproj" />
+	</ItemGroup>
+
+	<ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'windows'">
+		<ProjectReference Include="..\..\src\Salar.BluetoothLE.Windows\Salar.BluetoothLE.Windows.csproj" />
+	</ItemGroup>
+</Project>

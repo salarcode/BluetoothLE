@@ -1,0 +1,118 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="BleDemo.Maui.MainPage"
+             Title="BLE Demo">
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="16">
+            <Label Text="BLE Library — Real Device MAUI Demo"
+                   FontAttributes="Bold"
+                   FontSize="24" />
+
+            <Border StrokeThickness="1" Padding="14">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Adapter status" FontAttributes="Bold" />
+                    <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto" ColumnSpacing="10" RowSpacing="6">
+                        <Label Grid.Row="0" Text="Permission:" />
+                        <Label x:Name="PermissionStatusLabel" Grid.Row="0" Grid.Column="1" Text="Unknown" />
+                        <Label Grid.Row="1" Text="Bluetooth:" />
+                        <Label x:Name="AdapterStateLabel" Grid.Row="1" Grid.Column="1" Text="Unknown" />
+                        <Label Grid.Row="2" Text="Library:" />
+                        <Label x:Name="LibraryStateLabel" Grid.Row="2" Grid.Column="1" Text="Idle" />
+                        <Label Grid.Row="3" Text="Connected:" />
+                        <Label x:Name="ConnectedCountLabel" Grid.Row="3" Grid.Column="1" Text="0" />
+                        <Label Grid.Row="4" Text="Selected:" />
+                        <Label x:Name="SelectedDeviceLabel" Grid.Row="4" Grid.Column="1" Text="None" />
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+
+            <FlexLayout Direction="Row" Wrap="Wrap" JustifyContent="Start" AlignItems="Center">
+                <Button Text="Request Access" Clicked="OnRequestAccessClicked" />
+                <Button x:Name="ScanButton" Text="Scan" Clicked="OnScanClicked" />
+                <Button x:Name="StopScanButton" Text="Stop Scan" Clicked="OnStopScanClicked" />
+                <Button Text="Refresh Connected" Clicked="OnRefreshConnectedClicked" />
+            </FlexLayout>
+
+            <HorizontalStackLayout Spacing="10" VerticalOptions="Center">
+                <ActivityIndicator x:Name="BusyIndicator" IsVisible="False" IsRunning="False" />
+                <Label x:Name="FeedbackLabel" Text="Ready to scan for nearby BLE devices." VerticalOptions="Center" />
+            </HorizontalStackLayout>
+
+            <Label Text="Discovered devices" FontAttributes="Bold" />
+            <CollectionView x:Name="ScanResultsView" HeightRequest="280" SelectionMode="None">
+                <CollectionView.EmptyView>
+                    <Label Text="No scan results yet." Padding="12,8" />
+                </CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Border Margin="0,0,0,8" Padding="12">
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                                <VerticalStackLayout Spacing="4">
+                                    <Label Text="{Binding DisplayName}" FontAttributes="Bold" />
+                                    <Label Text="{Binding Address}" FontSize="12" />
+                                    <Label Text="{Binding SignalSummary}" FontSize="12" />
+                                </VerticalStackLayout>
+                                <Button Grid.Column="1"
+                                        Text="Connect"
+                                        IsEnabled="{Binding IsConnectable}"
+                                        Clicked="OnConnectToScanResultClicked" />
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <Label Text="Connected devices" FontAttributes="Bold" />
+            <CollectionView x:Name="ConnectedDevicesView" HeightRequest="180" SelectionMode="None">
+                <CollectionView.EmptyView>
+                    <Label Text="No connected devices." Padding="12,8" />
+                </CollectionView.EmptyView>
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Border Margin="0,0,0,8" Padding="12">
+                            <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                                <VerticalStackLayout Spacing="4">
+                                    <Label Text="{Binding DisplayName}" FontAttributes="Bold" />
+                                    <Label Text="{Binding Address}" FontSize="12" />
+                                    <Label Text="{Binding State}" FontSize="12" />
+                                </VerticalStackLayout>
+                                <Button Grid.Column="1"
+                                        Text="Inspect"
+                                        Clicked="OnInspectConnectedDeviceClicked" />
+                            </Grid>
+                        </Border>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+
+            <Border StrokeThickness="1" Padding="14">
+                <VerticalStackLayout Spacing="10">
+                    <Label Text="Selected device details" FontAttributes="Bold" />
+                    <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto" ColumnSpacing="10" RowSpacing="6">
+                        <Label Grid.Row="0" Text="Device:" />
+                        <Label x:Name="SelectedDeviceStateLabel" Grid.Row="0" Grid.Column="1" Text="None" />
+                        <Label Grid.Row="1" Text="Signal:" />
+                        <Label x:Name="SignalLabel" Grid.Row="1" Grid.Column="1" Text="Unavailable" />
+                    </Grid>
+
+                    <FlexLayout Direction="Row" Wrap="Wrap" JustifyContent="Start" AlignItems="Center">
+                        <Button x:Name="LoadServicesButton" Text="List GATT Services" Clicked="OnLoadServicesClicked" />
+                        <Button x:Name="DisconnectButton" Text="Disconnect" Clicked="OnDisconnectClicked" />
+                    </FlexLayout>
+
+                    <CollectionView x:Name="ServicesView" HeightRequest="220" SelectionMode="None">
+                        <CollectionView.EmptyView>
+                            <Label Text="Select a connected device and list its services." Padding="12,8" />
+                        </CollectionView.EmptyView>
+                        <CollectionView.ItemTemplate>
+                            <DataTemplate>
+                                <Label Text="{Binding .}" Margin="0,0,0,6" LineBreakMode="WordWrap" />
+                            </DataTemplate>
+                        </CollectionView.ItemTemplate>
+                    </CollectionView>
+                </VerticalStackLayout>
+            </Border>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

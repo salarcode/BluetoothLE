@@ -1,15 +1,15 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <PropertyGroup>
-    <OutputType>Exe</OutputType>
-    <TargetFramework>net10.0</TargetFramework>
-    <Nullable>enable</Nullable>
-    <LangVersion>latest</LangVersion>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <RootNamespace>BleDemo.Console</RootNamespace>
-    <AssemblyName>BleDemo.Console</AssemblyName>
-    <Description>Interactive console demo for Salar.BluetoothLESalar.BluetoothLE</Description>
-  </PropertyGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\src\Salar.BluetoothLESalar.BluetoothLE.Core\Salar.BluetoothLESalar.BluetoothLE.Core.csproj" />
-  </ItemGroup>
+	<PropertyGroup>
+		<OutputType>Exe</OutputType>
+		<TargetFramework>net10.0</TargetFramework>
+		<Nullable>enable</Nullable>
+		<LangVersion>latest</LangVersion>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<RootNamespace>BleDemo.Console</RootNamespace>
+		<AssemblyName>BleDemo.Console</AssemblyName>
+		<Description>Interactive console demo for Salar.BluetoothLESalar.BluetoothLE</Description>
+	</PropertyGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\..\src\Salar.BluetoothLE.Core\Salar.BluetoothLE.Core.csproj" />
+	</ItemGroup>
 </Project>

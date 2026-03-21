@@ -16,4 +16,5 @@
   <Folder Name="/tests/">
     <Project Path="tests/Salar.BluetoothLE.Tests/Salar.BluetoothLE.Tests.csproj" />
   </Folder>
+  <Project Path="MauiApp1Remove/MauiApp1Remove.csproj" Id="d7b7a84a-3f24-49b0-bc2c-393f7665a43e" />
 </Solution>

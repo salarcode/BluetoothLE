@@ -97,7 +97,7 @@ public partial class MainPage : ContentPage
 				Duration = TimeSpan.FromSeconds(10),
 				ScanMode = ScanMode.LowPower,
 				AllowDuplicates = false,
-				AndroidScanMode = AndroidScanMode.Auto,
+				AndroidLegacyScan = false,
 			});
 			FeedbackLabel.Text = "Scanning for nearby BLE devices...";
 		});

@@ -25,10 +25,10 @@ public class IosBleAdapter : BleAdapterBase
     {
         _centralManagerDelegate = new IosCentralManagerDelegate();
         _centralManagerDelegate.StateUpdated += OnStateUpdated;
-        _centralManagerDelegate.DiscoveredPeripheral += OnDiscoveredPeripheral;
-        _centralManagerDelegate.ConnectedPeripheral += OnConnectedPeripheral;
-        _centralManagerDelegate.FailedToConnectPeripheral += OnFailedToConnect;
-        _centralManagerDelegate.DisconnectedPeripheral += OnDisconnectedPeripheral;
+        _centralManagerDelegate.OnDiscoveredPeripheral += OnDiscoveredPeripheral;
+        _centralManagerDelegate.OnConnectedPeripheral += OnConnectedPeripheral;
+        _centralManagerDelegate.OnFailedToConnectPeripheral += OnFailedToConnect;
+        _centralManagerDelegate.OnDisconnectedPeripheral += OnDisconnectedPeripheral;
         _centralManager = new CBCentralManager(_centralManagerDelegate, null);
     }
 
@@ -199,7 +199,7 @@ public class IosBleAdapter : BleAdapterBase
 
         var field = typeof(IosBleDevice).GetField("_peripheral", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
         var peripheral = (CBPeripheral)field!.GetValue(device)!;
-        _centralManager.ConnectPeripheral(peripheral, null);
+        _centralManager.ConnectPeripheral(peripheral);
 
         var timeoutTask = Task.Delay(config.ConnectionTimeout, cancellationToken);
         var completedTask = await Task.WhenAny(tcs.Task, timeoutTask);

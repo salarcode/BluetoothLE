@@ -71,7 +71,7 @@
 
 					result.Add((global::Android.Manifest.Permission.Bluetooth, true));
 
-					if (sdk >= 29)
+					if (sdk >= 29 && _bluetoothLocation)
 					{
 						// TODO: 
 						/*

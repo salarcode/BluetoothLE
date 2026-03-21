@@ -1,7 +1,5 @@
 using Android.App;
 
-// Note: this file needs to be compied to `/Platforms/Android/AndroidPermissions.cs` of you app
-
 [assembly: UsesPermission(Android.Manifest.Permission.AccessCoarseLocation)]
 [assembly: UsesPermission(Android.Manifest.Permission.AccessFineLocation)]
 

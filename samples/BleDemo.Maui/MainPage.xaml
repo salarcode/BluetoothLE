@@ -28,10 +28,10 @@
             </Border>
 
             <FlexLayout Direction="Row" Wrap="Wrap" JustifyContent="Start" AlignItems="Center">
-                <Button Text="Request Access" Clicked="OnRequestAccessClicked" />
-                <Button x:Name="ScanButton" Text="Scan" Clicked="OnScanClicked" />
-                <Button x:Name="StopScanButton" Text="Stop Scan" Clicked="OnStopScanClicked" />
-                <Button Text="Refresh Connected" Clicked="OnRefreshConnectedClicked" />
+                <Button Text="Request Access" Clicked="OnRequestAccessClicked" Margin="2" />
+                <Button x:Name="ScanButton" Text="Scan" Clicked="OnScanClicked" Margin="2" />
+                <Button x:Name="StopScanButton" Text="Stop Scan" Clicked="OnStopScanClicked" Margin="2" />
+                <Button Text="Refresh Connected" Clicked="OnRefreshConnectedClicked" Margin="2" />
             </FlexLayout>
 
             <HorizontalStackLayout Spacing="10" VerticalOptions="Center">

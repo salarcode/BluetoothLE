@@ -38,10 +38,10 @@ public class IosBleDevice : IBleDevice
         _centralManager = centralManager;
 
         _peripheralDelegate = new IosPeripheralDelegate();
-        _peripheralDelegate.DiscoveredServices += OnServicesDiscovered;
-        _peripheralDelegate.DiscoveredCharacteristics += OnCharacteristicsDiscovered;
-        _peripheralDelegate.UpdatedCharacteristicValue += OnCharacteristicValueUpdated;
-        _peripheralDelegate.WroteCharacteristicValue += OnCharacteristicValueWritten;
+        _peripheralDelegate.OnDiscoveredServices += OnServicesDiscovered;
+        _peripheralDelegate.OnDiscoveredCharacteristics += OnCharacteristicsDiscovered;
+        _peripheralDelegate.OnUpdatedCharacteristicValue += OnCharacteristicValueUpdated;
+        _peripheralDelegate.OnWroteCharacteristicValue += OnCharacteristicValueWritten;
         _peripheral.Delegate = _peripheralDelegate;
     }
 

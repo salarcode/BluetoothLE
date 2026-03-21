@@ -27,6 +27,13 @@ public class ScanConfigTests
     }
 
     [Fact]
+    public void Default_AndroidLegacyScanIsFalse()
+    {
+        var config = ScanConfig.Default;
+        Assert.False(config.AndroidLegacyScan);
+    }
+
+    [Fact]
     public void Default_ServiceUuidFiltersIsEmpty()
     {
         var config = ScanConfig.Default;
@@ -55,6 +62,13 @@ public class ScanConfigTests
     {
         var config = new ScanConfig { AllowDuplicates = true };
         Assert.True(config.AllowDuplicates);
+    }
+
+    [Fact]
+    public void CanCreate_WithAndroidLegacyScanTrue()
+    {
+        var config = new ScanConfig { AndroidLegacyScan = true };
+        Assert.True(config.AndroidLegacyScan);
     }
 
     [Fact]

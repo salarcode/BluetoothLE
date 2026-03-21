@@ -64,9 +64,13 @@ public class AndroidBleAdapter : BleAdapterBase
 
         _scanCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
-        var settings = new ScanSettings.Builder()!
-            .SetScanMode(ToAndroidScanModeLE(config.ScanMode))!
-            .Build()!;
+        var settingsBuilder = new ScanSettings.Builder()!
+            .SetScanMode(ToAndroidScanModeLE(config.ScanMode))!;
+
+        if (Build.VERSION.SdkInt >= BuildVersionCodes.O)
+            settingsBuilder.SetLegacy(config.AndroidLegacyScan);
+
+        var settings = settingsBuilder.Build()!;
 
         var filters = config.ServiceUuidFilters.Count > 0
             ? config.ServiceUuidFilters
@@ -77,16 +81,13 @@ public class AndroidBleAdapter : BleAdapterBase
             : null;
 
         _scanCallback = new AndroidScanCallback(
-            result => PublishScanResult(result),
+            PublishScanResult,
             errorCode => _scanErrorSubject.OnNext(new BleException(BleErrorCode.ScanFailed, $"Scan failed with code: {errorCode}"))
         );
 
         LibraryState = BleLibraryState.Scanning;
 
-        if (filters != null)
-            _scanner.StartScan(filters, settings, _scanCallback);
-        else
-            _scanner.StartScan(_scanCallback);
+        _scanner.StartScan(filters ?? [], settings, _scanCallback);
 
         _ = Task.Delay(config.Duration, _scanCts.Token)
             .ContinueWith(async _ => await StopScanAsync(CancellationToken.None), TaskContinuationOptions.NotOnCanceled);

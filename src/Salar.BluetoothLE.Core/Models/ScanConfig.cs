@@ -16,4 +16,5 @@ public sealed class ScanConfig
     public List<Guid> ServiceUuidFilters { get; init; } = new();
     public ScanMode ScanMode { get; init; } = ScanMode.Balanced;
     public bool AllowDuplicates { get; init; } = false;
+    public bool AndroidLegacyScan { get; init; } = false;
 }

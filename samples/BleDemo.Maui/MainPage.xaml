@@ -97,8 +97,8 @@
                     </Grid>
 
                     <FlexLayout Direction="Row" Wrap="Wrap" JustifyContent="Start" AlignItems="Center">
-                        <Button x:Name="LoadServicesButton" Text="List GATT Services" Clicked="OnLoadServicesClicked" />
-                        <Button x:Name="DisconnectButton" Text="Disconnect" Clicked="OnDisconnectClicked" />
+                        <Button x:Name="LoadServicesButton" Text="List GATT Services" Clicked="OnLoadServicesClicked" Margin="2" />
+                        <Button x:Name="DisconnectButton" Text="Disconnect" Clicked="OnDisconnectClicked" Margin="2" />
                     </FlexLayout>
 
                     <CollectionView x:Name="ServicesView" HeightRequest="220" SelectionMode="None">

@@ -1,4 +1,5 @@
-using Salar.BluetoothLE.Core.Interfaces;
+using Salar.BluetoothLE;
+
 
 #if ANDROID
 using Android.App;

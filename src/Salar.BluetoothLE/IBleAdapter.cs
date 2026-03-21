@@ -1,7 +1,8 @@
 using Salar.BluetoothLE.Core.Enums;
+using Salar.BluetoothLE.Core.Interfaces;
 using Salar.BluetoothLE.Core.Models;
 
-namespace Salar.BluetoothLE.Core.Interfaces;
+namespace Salar.BluetoothLE;
 
 public interface IBleAdapter
 {

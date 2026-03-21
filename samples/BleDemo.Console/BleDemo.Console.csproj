@@ -12,7 +12,6 @@
     <EnableWindowsTargeting>true</EnableWindowsTargeting>
   </PropertyGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Salar.BluetoothLE.Core\Salar.BluetoothLE.Core.csproj" />
-    <ProjectReference Include="..\..\src\Salar.BluetoothLE.Windows\Salar.BluetoothLE.Windows.csproj" />
+    <ProjectReference Include="..\..\src\Salar.BluetoothLE\Salar.BluetoothLE.csproj" />
   </ItemGroup>
 </Project>

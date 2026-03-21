@@ -7,14 +7,10 @@
     <Project Path="samples/BleSimulationDemo.Console/BleSimulationDemo.Console.csproj" />
   </Folder>
   <Folder Name="/src/">
-    <Project Path="src/Salar.BluetoothLE.Android/Salar.BluetoothLE.Android.csproj" />
-    <Project Path="src/Salar.BluetoothLE.Core/Salar.BluetoothLE.Core.csproj" />
-    <Project Path="src/Salar.BluetoothLE.iOS/Salar.BluetoothLE.iOS.csproj" />
     <Project Path="src/Salar.BluetoothLE.Maui/Salar.BluetoothLE.Maui.csproj" />
-    <Project Path="src/Salar.BluetoothLE.Windows/Salar.BluetoothLE.Windows.csproj" />
+    <Project Path="src/Salar.BluetoothLE/Salar.BluetoothLE.csproj" />
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Salar.BluetoothLE.Tests/Salar.BluetoothLE.Tests.csproj" />
   </Folder>
-  <Project Path="MauiApp1Remove/MauiApp1Remove.csproj" Id="d7b7a84a-3f24-49b0-bc2c-393f7665a43e" />
 </Solution>

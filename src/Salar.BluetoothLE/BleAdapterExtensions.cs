@@ -1,9 +1,8 @@
-using Salar.BluetoothLE.Core.Interfaces;
 using Microsoft.Extensions.DependencyInjection;
 
-namespace Salar.BluetoothLE.Maui;
+namespace Salar.BluetoothLE;
 
-public static class MauiBleExtensions
+public static class BleAdapterExtensions
 {
     /// <summary>
     /// Registers the BLE adapter and related services for the current platform.
@@ -19,10 +18,14 @@ public static class MauiBleExtensions
     }
 
     private static IBleAdapter CreatePlatformAdapter()
-    {
-        throw new PlatformNotSupportedException(
-            "Salar.BluetoothLE requires a platform-specific adapter. " +
-            "Use AddBluetoothLE() overload with a platform adapter factory, " +
-            "or reference the platform-specific package (Salar.BluetoothLE.Android, Salar.BluetoothLE.iOS, Salar.BluetoothLE.Windows).");
-    }
+        =>
+#if ANDROID
+        new Android.AndroidBleAdapter(Application.Context);
+#elif IOS
+        new iOS.IosBleAdapter();
+#elif WINDOWS
+        new Windows.WindowsBleAdapter();
+#else
+        throw new PlatformNotSupportedException("Salar.BluetoothLE requires a supported BLE platform.");
+#endif
 }

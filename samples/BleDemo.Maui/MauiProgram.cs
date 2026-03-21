@@ -1,4 +1,4 @@
-﻿using Salar.BluetoothLE.Maui;
+﻿using Salar.BluetoothLE;
 
 namespace BleDemo.Maui;
 
@@ -15,7 +15,7 @@ public static class MauiProgram
                 fonts.AddFont("OpenSans-Semibold.ttf", "OpenSansSemibold");
             });
 
-        builder.Services.AddBluetoothLE(_ => PlatformBleAdapterFactory.Create());
+        builder.Services.AddBluetoothLE();
         builder.Services.AddSingleton<AppShell>();
         builder.Services.AddSingleton<MainPage>();
 

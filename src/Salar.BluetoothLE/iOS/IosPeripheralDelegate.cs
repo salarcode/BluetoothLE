@@ -3,6 +3,9 @@ using Foundation;
 
 namespace Salar.BluetoothLE.iOS;
 
+/// <summary>
+/// Bridges CBPeripheral delegate callbacks into library events.
+/// </summary>
 public class IosPeripheralDelegate : CBPeripheralDelegate
 {
     public event Action<CBPeripheral, NSError?>? OnDiscoveredServices;
@@ -12,18 +15,33 @@ public class IosPeripheralDelegate : CBPeripheralDelegate
     public event Action<CBPeripheral, CBDescriptor, NSError?>? OnWroteDescriptorValue;
     public event Action<CBPeripheral, int>? UpdatedMtu;
 
+    /// <summary>
+    /// Publishes discovered service events.
+    /// </summary>
     public override void DiscoveredService(CBPeripheral peripheral, NSError? error)
         => OnDiscoveredServices?.Invoke(peripheral, error);
 
+    /// <summary>
+    /// Publishes discovered characteristic events.
+    /// </summary>
     public override void DiscoveredCharacteristics(CBPeripheral peripheral, CBService service, NSError? error)
         => OnDiscoveredCharacteristics?.Invoke(peripheral, service, error);
 
+    /// <summary>
+    /// Publishes characteristic value update events.
+    /// </summary>
     public override void UpdatedCharacterteristicValue(CBPeripheral peripheral, CBCharacteristic characteristic, NSError? error)
         => OnUpdatedCharacteristicValue?.Invoke(peripheral, characteristic, error);
 
+    /// <summary>
+    /// Publishes characteristic write completion events.
+    /// </summary>
     public override void WroteCharacteristicValue(CBPeripheral peripheral, CBCharacteristic characteristic, NSError? error)
         => OnWroteCharacteristicValue?.Invoke(peripheral, characteristic, error);
 
+    /// <summary>
+    /// Publishes descriptor write completion events.
+    /// </summary>
     public override void WroteDescriptorValue(CBPeripheral peripheral, CBDescriptor descriptor, NSError? error)
         => OnWroteDescriptorValue?.Invoke(peripheral, descriptor, error);
 }

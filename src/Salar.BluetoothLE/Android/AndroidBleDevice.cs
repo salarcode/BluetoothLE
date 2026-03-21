@@ -7,6 +7,9 @@ using System.Reactive.Subjects;
 
 namespace Salar.BluetoothLE.Android;
 
+/// <summary>
+/// Implements a BLE device wrapper over Android GATT operations.
+/// </summary>
 public class AndroidBleDevice : IBleDevice
 {
     private readonly BluetoothDevice _nativeDevice;
@@ -35,6 +38,9 @@ public class AndroidBleDevice : IBleDevice
     public int Mtu => _mtu;
     public IObservable<BleDeviceState> StateChanged => _stateSubject;
 
+    /// <summary>
+    /// Initializes a new AndroidBleDevice instance.
+    /// </summary>
     public AndroidBleDevice(BluetoothDevice device, Context context)
     {
         _nativeDevice = device;
@@ -158,6 +164,9 @@ public class AndroidBleDevice : IBleDevice
             await RequestMtuAsync(config.RequestMtu.Value, cancellationToken);
     }
 
+    /// <summary>
+    /// Gets the GATT services exposed by this device.
+    /// </summary>
     public async Task<IReadOnlyList<IBleService>> GetServicesAsync(CancellationToken cancellationToken = default)
     {
         if (_gatt == null) throw new BleException(BleErrorCode.NotConnected);
@@ -170,12 +179,18 @@ public class AndroidBleDevice : IBleDevice
         return await Task.FromResult<IReadOnlyList<IBleService>>(_services.AsReadOnly());
     }
 
+    /// <summary>
+    /// Gets the service with the specified UUID.
+    /// </summary>
     public async Task<IBleService?> GetServiceAsync(Guid serviceUuid, CancellationToken cancellationToken = default)
     {
         var services = await GetServicesAsync(cancellationToken);
         return services.FirstOrDefault(s => s.Uuid == serviceUuid);
     }
 
+    /// <summary>
+    /// Disconnects from the BLE device.
+    /// </summary>
     public async Task DisconnectAsync(CancellationToken cancellationToken = default)
     {
         if (_gatt == null)
@@ -222,6 +237,9 @@ public class AndroidBleDevice : IBleDevice
         _stateSubject.OnNext(_state);
     }
 
+    /// <summary>
+    /// Requests the specified MTU for the BLE connection.
+    /// </summary>
     public async Task<int> RequestMtuAsync(int mtu, CancellationToken cancellationToken = default)
     {
         if (_gatt == null) throw new BleException(BleErrorCode.NotConnected);
@@ -276,6 +294,9 @@ public class AndroidBleDevice : IBleDevice
             _notificationHandlers.Remove(uuid);
     }
 
+    /// <summary>
+    /// Releases the device and any native Android GATT resources.
+    /// </summary>
     public void Dispose()
     {
         if (_disposed) return;

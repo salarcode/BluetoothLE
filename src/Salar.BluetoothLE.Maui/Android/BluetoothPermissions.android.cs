@@ -1,7 +1,7 @@
-﻿namespace Salar.BluetoothLE.Maui;
+namespace Salar.BluetoothLE.Maui;
 
 /// <summary>
-///		MAUI Bluetooth Permission Declaration (for Android).
+/// Defines the Android Bluetooth permission request used by the MAUI helpers.
 /// </summary>
 public partial class BluetoothPermissions
 {
@@ -10,13 +10,16 @@ public partial class BluetoothPermissions
     private readonly bool _connect;
     private readonly bool _bluetoothLocation;
 
+    /// <summary>
+    /// Initializes a new BluetoothPermissions instance with default Android permission options.
+    /// </summary>
     public BluetoothPermissions()
         : this(true, false, true, false)
     {
     }
 
     /// <summary>
-    /// 
+    /// Initializes a new BluetoothPermissions instance that controls scan, advertise, connect, and location permission requests on Android.
     /// </summary>
     /// <param name="scan">Needed only if your app looks for Bluetooth devices.
     /// If your app doesn't use Bluetooth scan results to derive physical location, you can make a strong assertion that your app never uses the Bluetooth permissions to derive physical location. 

@@ -7,6 +7,9 @@ using Salar.BluetoothLE.Core.Models;
 
 namespace Salar.BluetoothLE.iOS;
 
+/// <summary>
+/// Implements the BLE adapter for iOS scanning and device connections.
+/// </summary>
 public class IosBleAdapter : BleAdapterBase
 {
     private CBCentralManager? _centralManager;
@@ -16,6 +19,9 @@ public class IosBleAdapter : BleAdapterBase
     private readonly object _cacheLock = new();
     private readonly Dictionary<string, TaskCompletionSource<bool>> _connectionTcs = new();
 
+    /// <summary>
+    /// Initializes a new IosBleAdapter instance.
+    /// </summary>
     public IosBleAdapter()
     {
         InitializeCentralManager();
@@ -125,6 +131,9 @@ public class IosBleAdapter : BleAdapterBase
         }
     }
 
+    /// <summary>
+    /// Requests Bluetooth access for the current platform.
+    /// </summary>
     public override Task<BlePermissionStatus> RequestAccessAsync(CancellationToken cancellationToken = default)
     {
         var status = CBCentralManager.Authorization switch
@@ -137,6 +146,9 @@ public class IosBleAdapter : BleAdapterBase
         return Task.FromResult(status);
     }
 
+    /// <summary>
+    /// Starts scanning for nearby BLE devices.
+    /// </summary>
     public override Task StartScanAsync(ScanConfig? config = null, CancellationToken cancellationToken = default)
     {
         if (_centralManager == null) throw new BleException(BleErrorCode.NotSupported);
@@ -159,6 +171,9 @@ public class IosBleAdapter : BleAdapterBase
         return Task.CompletedTask;
     }
 
+    /// <summary>
+    /// Stops any active BLE scan.
+    /// </summary>
     public override Task StopScanAsync(CancellationToken cancellationToken = default)
     {
         _centralManager?.StopScan();
@@ -169,6 +184,9 @@ public class IosBleAdapter : BleAdapterBase
         return Task.CompletedTask;
     }
 
+    /// <summary>
+    /// Connects to the BLE device with the specified address.
+    /// </summary>
     public override async Task<IBleDevice> ConnectAsync(string address, ConnectionConfig? config = null, CancellationToken cancellationToken = default)
     {
         if (_centralManager == null) throw new BleException(BleErrorCode.NotSupported);
@@ -218,6 +236,9 @@ public class IosBleAdapter : BleAdapterBase
         return device;
     }
 
+    /// <summary>
+    /// Reconnects to a previously known BLE device.
+    /// </summary>
     public override Task<IBleDevice> ReconnectAsync(string address, ConnectionConfig? config = null, CancellationToken cancellationToken = default)
     {
         RemoveConnectedDevice(address);

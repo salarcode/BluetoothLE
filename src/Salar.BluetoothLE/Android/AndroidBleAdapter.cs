@@ -11,6 +11,9 @@ using ScanMode = Android.Bluetooth.LE.ScanMode;
 
 namespace Salar.BluetoothLE.Android;
 
+/// <summary>
+/// Implements the BLE adapter for Android scanning and device connections.
+/// </summary>
 public class AndroidBleAdapter : BleAdapterBase
 {
     private readonly BluetoothManager _bluetoothManager;
@@ -23,6 +26,9 @@ public class AndroidBleAdapter : BleAdapterBase
     private readonly object _cacheLock = new();
     private readonly Subject<Exception> _scanErrorSubject = new();
 
+    /// <summary>
+    /// Initializes a new AndroidBleAdapter instance.
+    /// </summary>
     public AndroidBleAdapter(Context context)
     {
         _context = context;
@@ -41,6 +47,9 @@ public class AndroidBleAdapter : BleAdapterBase
         AdapterState = _bluetoothAdapter.IsEnabled ? BleAdapterState.PoweredOn : BleAdapterState.PoweredOff;
     }
 
+    /// <summary>
+    /// Requests Bluetooth access for the current platform.
+    /// </summary>
     public override Task<BlePermissionStatus> RequestAccessAsync(CancellationToken cancellationToken = default)
     {
         if (_bluetoothAdapter == null)
@@ -48,6 +57,9 @@ public class AndroidBleAdapter : BleAdapterBase
         return Task.FromResult(_bluetoothAdapter.IsEnabled ? BlePermissionStatus.Granted : BlePermissionStatus.Denied);
     }
 
+    /// <summary>
+    /// Starts scanning for nearby BLE devices.
+    /// </summary>
     public override async Task StartScanAsync(ScanConfig? config = null, CancellationToken cancellationToken = default)
     {
         if (AdapterState != BleAdapterState.PoweredOn)
@@ -93,6 +105,9 @@ public class AndroidBleAdapter : BleAdapterBase
             .ContinueWith(async _ => await StopScanAsync(CancellationToken.None), TaskContinuationOptions.NotOnCanceled);
     }
 
+    /// <summary>
+    /// Stops any active BLE scan.
+    /// </summary>
     public override Task StopScanAsync(CancellationToken cancellationToken = default)
     {
         if (LibraryState != BleLibraryState.Scanning) return Task.CompletedTask;
@@ -108,6 +123,9 @@ public class AndroidBleAdapter : BleAdapterBase
         return Task.CompletedTask;
     }
 
+    /// <summary>
+    /// Connects to the BLE device with the specified address.
+    /// </summary>
     public override async Task<IBleDevice> ConnectAsync(string address, ConnectionConfig? config = null, CancellationToken cancellationToken = default)
     {
         if (AdapterState != BleAdapterState.PoweredOn)
@@ -162,6 +180,9 @@ public class AndroidBleAdapter : BleAdapterBase
         return device;
     }
 
+    /// <summary>
+    /// Reconnects to a previously known BLE device.
+    /// </summary>
     public override Task<IBleDevice> ReconnectAsync(string address, ConnectionConfig? config = null, CancellationToken cancellationToken = default)
     {
         RemoveConnectedDevice(address);

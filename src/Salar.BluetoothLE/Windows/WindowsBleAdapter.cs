@@ -8,6 +8,9 @@ using Salar.BluetoothLE.Core.Models;
 
 namespace Salar.BluetoothLE.Windows;
 
+/// <summary>
+/// Implements the BLE adapter for Windows scanning and device connections.
+/// </summary>
 public class WindowsBleAdapter : BleAdapterBase
 {
     private BluetoothLEAdvertisementWatcher? _watcher;
@@ -15,16 +18,25 @@ public class WindowsBleAdapter : BleAdapterBase
     private readonly Dictionary<ulong, WindowsBleDevice> _deviceCache = new();
     private readonly object _cacheLock = new();
 
+    /// <summary>
+    /// Initializes a new WindowsBleAdapter instance.
+    /// </summary>
     public WindowsBleAdapter()
     {
         AdapterState = BleAdapterState.PoweredOn;
     }
 
+    /// <summary>
+    /// Requests Bluetooth access for the current platform.
+    /// </summary>
     public override Task<BlePermissionStatus> RequestAccessAsync(CancellationToken cancellationToken = default)
     {
         return Task.FromResult(BlePermissionStatus.Granted);
     }
 
+    /// <summary>
+    /// Starts scanning for nearby BLE devices.
+    /// </summary>
     public override Task StartScanAsync(ScanConfig? config = null, CancellationToken cancellationToken = default)
     {
         config ??= ScanConfig.Default;
@@ -86,6 +98,9 @@ public class WindowsBleAdapter : BleAdapterBase
         LibraryState = BleLibraryState.Idle;
     }
 
+    /// <summary>
+    /// Stops any active BLE scan.
+    /// </summary>
     public override Task StopScanAsync(CancellationToken cancellationToken = default)
     {
         if (_watcher != null)
@@ -103,6 +118,9 @@ public class WindowsBleAdapter : BleAdapterBase
         return Task.CompletedTask;
     }
 
+    /// <summary>
+    /// Connects to the BLE device with the specified address.
+    /// </summary>
     public override async Task<IBleDevice> ConnectAsync(string address, ConnectionConfig? config = null, CancellationToken cancellationToken = default)
     {
         config ??= ConnectionConfig.Default;
@@ -153,6 +171,9 @@ public class WindowsBleAdapter : BleAdapterBase
         return device;
     }
 
+    /// <summary>
+    /// Reconnects to a previously known BLE device.
+    /// </summary>
     public override Task<IBleDevice> ReconnectAsync(string address, ConnectionConfig? config = null, CancellationToken cancellationToken = default)
     {
         ulong bluetoothAddress = Convert.ToUInt64(address, 16);

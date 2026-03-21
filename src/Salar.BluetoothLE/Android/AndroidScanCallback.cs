@@ -4,22 +4,34 @@ using ScanResult = Android.Bluetooth.LE.ScanResult;
 
 namespace Salar.BluetoothLE.Android;
 
+/// <summary>
+/// Bridges Android scan callbacks into library scan results.
+/// </summary>
 public class AndroidScanCallback : ScanCallback
 {
 	private readonly Action<Core.Models.ScanResult> _onResult;
 	private readonly Action<int>? _onFailed;
 
+	/// <summary>
+	/// Initializes a new AndroidScanCallback instance.
+	/// </summary>
 	public AndroidScanCallback(Action<Core.Models.ScanResult> onResult, Action<int>? onFailed = null)
 	{
 		_onResult = onResult;
 		_onFailed = onFailed;
 	}
 
+	/// <summary>
+	/// Publishes a single Android scan result.
+	/// </summary>
 	public override void OnScanResult(ScanCallbackType callbackType, ScanResult? result)
 	{
 		PublishResult(result);
 	}
 
+	/// <summary>
+	/// Publishes a batch of Android scan results.
+	/// </summary>
 	public override void OnBatchScanResults(IList<ScanResult>? results)
 	{
 		if (results == null) return;
@@ -28,6 +40,9 @@ public class AndroidScanCallback : ScanCallback
 			PublishResult(result);
 	}
 
+	/// <summary>
+	/// Publishes an Android scan failure event.
+	/// </summary>
 	public override void OnScanFailed(ScanFailure errorCode)
 	{
 		_onFailed?.Invoke((int)errorCode);

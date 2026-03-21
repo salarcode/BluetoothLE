@@ -2,6 +2,9 @@ using Microsoft.Extensions.DependencyInjection;
 
 namespace Salar.BluetoothLE;
 
+/// <summary>
+/// Provides dependency injection helpers for registering BLE services.
+/// </summary>
 public static class BleAdapterExtensions
 {
     /// <summary>

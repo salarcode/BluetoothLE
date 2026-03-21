@@ -5,6 +5,9 @@ using Salar.BluetoothLE.Core.Models;
 
 namespace Salar.BluetoothLE.Core.Abstractions;
 
+/// <summary>
+/// Provides shared state management and connection tracking for platform-specific BLE adapters.
+/// </summary>
 public abstract class BleAdapterBase : IBleAdapter, IDisposable
 {
     private readonly Subject<BleAdapterState> _adapterStateSubject = new();
@@ -79,10 +82,25 @@ public abstract class BleAdapterBase : IBleAdapter, IDisposable
         }
     }
 
+    /// <summary>
+    /// Requests Bluetooth access for the current platform.
+    /// </summary>
     public abstract Task<BlePermissionStatus> RequestAccessAsync(CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Starts scanning for nearby BLE devices.
+    /// </summary>
     public abstract Task StartScanAsync(ScanConfig? config = null, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Stops any active BLE scan.
+    /// </summary>
     public abstract Task StopScanAsync(CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Connects to the BLE device with the specified address.
+    /// </summary>
     public abstract Task<IBleDevice> ConnectAsync(string address, ConnectionConfig? config = null, CancellationToken cancellationToken = default);
+    /// <summary>
+    /// Reconnects to a previously known BLE device.
+    /// </summary>
     public abstract Task<IBleDevice> ReconnectAsync(string address, ConnectionConfig? config = null, CancellationToken cancellationToken = default);
 
     protected virtual void Dispose(bool disposing)
@@ -107,6 +125,9 @@ public abstract class BleAdapterBase : IBleAdapter, IDisposable
         _disposed = true;
     }
 
+    /// <summary>
+    /// Releases the adapter and any connected device resources.
+    /// </summary>
     public void Dispose()
     {
         Dispose(true);

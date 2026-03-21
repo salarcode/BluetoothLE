@@ -7,6 +7,9 @@ using System.Reactive.Subjects;
 
 namespace Salar.BluetoothLE.iOS;
 
+/// <summary>
+/// Implements a BLE device wrapper over iOS CoreBluetooth operations.
+/// </summary>
 public class IosBleDevice : IBleDevice
 {
     private readonly CBPeripheral _peripheral;
@@ -32,6 +35,9 @@ public class IosBleDevice : IBleDevice
     public int Mtu => _mtu;
     public IObservable<BleDeviceState> StateChanged => _stateSubject;
 
+    /// <summary>
+    /// Initializes a new IosBleDevice instance.
+    /// </summary>
     public IosBleDevice(CBPeripheral peripheral, CBCentralManager centralManager)
     {
         _peripheral = peripheral;
@@ -159,6 +165,9 @@ public class IosBleDevice : IBleDevice
         await Task.CompletedTask;
     }
 
+    /// <summary>
+    /// Gets the GATT services exposed by this device.
+    /// </summary>
     public async Task<IReadOnlyList<IBleService>> GetServicesAsync(CancellationToken cancellationToken = default)
     {
         if (_services == null)
@@ -171,12 +180,18 @@ public class IosBleDevice : IBleDevice
         return _services.AsReadOnly();
     }
 
+    /// <summary>
+    /// Gets the service with the specified UUID.
+    /// </summary>
     public async Task<IBleService?> GetServiceAsync(Guid serviceUuid, CancellationToken cancellationToken = default)
     {
         var services = await GetServicesAsync(cancellationToken);
         return services.FirstOrDefault(s => s.Uuid == serviceUuid);
     }
 
+    /// <summary>
+    /// Disconnects from the BLE device.
+    /// </summary>
     public Task DisconnectAsync(CancellationToken cancellationToken = default)
     {
         // Signal disconnecting state immediately so callers see the transition.
@@ -189,12 +204,18 @@ public class IosBleDevice : IBleDevice
         return Task.CompletedTask;
     }
 
+    /// <summary>
+    /// Requests the specified MTU for the BLE connection.
+    /// </summary>
     public Task<int> RequestMtuAsync(int mtu, CancellationToken cancellationToken = default)
     {
         _mtu = (int)_peripheral.GetMaximumWriteValueLength(CBCharacteristicWriteType.WithResponse);
         return Task.FromResult(_mtu);
     }
 
+    /// <summary>
+    /// Releases the device and any native iOS Bluetooth resources.
+    /// </summary>
     public void Dispose()
     {
         if (_disposed) return;

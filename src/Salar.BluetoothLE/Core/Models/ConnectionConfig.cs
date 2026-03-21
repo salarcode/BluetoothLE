@@ -1,5 +1,8 @@
 namespace Salar.BluetoothLE.Core.Models;
 
+/// <summary>
+/// Defines options for establishing and configuring a BLE device connection.
+/// </summary>
 public sealed class ConnectionConfig
 {
     public static readonly ConnectionConfig Default = new();

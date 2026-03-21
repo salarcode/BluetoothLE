@@ -1,5 +1,8 @@
 namespace Salar.BluetoothLE.Core.Models;
 
+/// <summary>
+/// Defines the scan performance and power behavior used during BLE discovery.
+/// </summary>
 public enum ScanMode
 {
     LowPower,
@@ -8,6 +11,9 @@ public enum ScanMode
     Opportunistic
 }
 
+/// <summary>
+/// Defines options for controlling BLE scan duration, filters, and platform behavior.
+/// </summary>
 public sealed class ScanConfig
 {
     public static readonly ScanConfig Default = new();

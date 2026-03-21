@@ -1,21 +1,33 @@
 namespace Salar.BluetoothLE.Core.Models;
 
+/// <summary>
+/// Represents an exception thrown when a BLE operation fails.
+/// </summary>
 public class BleException : Exception
 {
     public BleErrorCode ErrorCode { get; }
 
+    /// <summary>
+    /// Initializes a new BLE exception using the default message for the specified error code.
+    /// </summary>
     public BleException(BleErrorCode errorCode)
         : base(GetDefaultMessage(errorCode))
     {
         ErrorCode = errorCode;
     }
 
+    /// <summary>
+    /// Initializes a new BLE exception using the specified error code and message.
+    /// </summary>
     public BleException(BleErrorCode errorCode, string message)
         : base(message)
     {
         ErrorCode = errorCode;
     }
 
+    /// <summary>
+    /// Initializes a new BLE exception using the specified error code, message, and inner exception.
+    /// </summary>
     public BleException(BleErrorCode errorCode, string message, Exception innerException)
         : base(message, innerException)
     {

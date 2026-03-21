@@ -7,6 +7,9 @@ using System.Reactive.Subjects;
 
 namespace Salar.BluetoothLE.Windows;
 
+/// <summary>
+/// Implements a BLE device wrapper over Windows GATT operations.
+/// </summary>
 public class WindowsBleDevice : IBleDevice
 {
     private BluetoothLEDevice? _nativeDevice;
@@ -24,6 +27,9 @@ public class WindowsBleDevice : IBleDevice
     public int Mtu => _mtu;
     public IObservable<BleDeviceState> StateChanged => _stateSubject;
 
+    /// <summary>
+    /// Initializes a new WindowsBleDevice instance.
+    /// </summary>
     public WindowsBleDevice(ulong bluetoothAddress)
     {
         _bluetoothAddress = bluetoothAddress;
@@ -86,6 +92,9 @@ public class WindowsBleDevice : IBleDevice
         _stateSubject.OnNext(newState);
     }
 
+    /// <summary>
+    /// Gets the GATT services exposed by this device.
+    /// </summary>
     public Task<IReadOnlyList<IBleService>> GetServicesAsync(CancellationToken cancellationToken = default)
     {
         if (_nativeDevice == null) throw new BleException(BleErrorCode.NotConnected);
@@ -93,12 +102,18 @@ public class WindowsBleDevice : IBleDevice
         return Task.FromResult<IReadOnlyList<IBleService>>(_services.AsReadOnly());
     }
 
+    /// <summary>
+    /// Gets the service with the specified UUID.
+    /// </summary>
     public async Task<IBleService?> GetServiceAsync(Guid serviceUuid, CancellationToken cancellationToken = default)
     {
         var services = await GetServicesAsync(cancellationToken);
         return services.FirstOrDefault(s => s.Uuid == serviceUuid);
     }
 
+    /// <summary>
+    /// Disconnects from the BLE device.
+    /// </summary>
     public Task DisconnectAsync(CancellationToken cancellationToken = default)
     {
         _state = BleDeviceState.Disconnecting;
@@ -134,12 +149,18 @@ public class WindowsBleDevice : IBleDevice
         _services = null;
     }
 
+    /// <summary>
+    /// Requests the specified MTU for the BLE connection.
+    /// </summary>
     public Task<int> RequestMtuAsync(int mtu, CancellationToken cancellationToken = default)
     {
         // Windows handles MTU negotiation automatically
         return Task.FromResult(_mtu);
     }
 
+    /// <summary>
+    /// Releases the device and any native Windows Bluetooth resources.
+    /// </summary>
     public void Dispose()
     {
         if (_disposed) return;

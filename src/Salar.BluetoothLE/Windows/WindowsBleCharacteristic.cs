@@ -6,12 +6,18 @@ using Salar.BluetoothLE.Core.Models;
 
 namespace Salar.BluetoothLE.Windows;
 
+/// <summary>
+/// Implements a BLE characteristic wrapper for Windows GATT operations.
+/// </summary>
 public class WindowsBleCharacteristic : IBleCharacteristic
 {
     private readonly GattCharacteristic _characteristic;
     private Action<byte[]>? _notificationHandler;
     private readonly object _handlerLock = new();
 
+    /// <summary>
+    /// Initializes a new WindowsBleCharacteristic instance.
+    /// </summary>
     public WindowsBleCharacteristic(GattCharacteristic characteristic)
     {
         _characteristic = characteristic;
@@ -25,6 +31,9 @@ public class WindowsBleCharacteristic : IBleCharacteristic
     public bool CanNotify => _characteristic.CharacteristicProperties.HasFlag(GattCharacteristicProperties.Notify);
     public bool CanIndicate => _characteristic.CharacteristicProperties.HasFlag(GattCharacteristicProperties.Indicate);
 
+    /// <summary>
+    /// Reads the current value of the characteristic.
+    /// </summary>
     public async Task<byte[]> ReadAsync(CancellationToken cancellationToken = default)
     {
         if (!CanRead) throw new BleException(BleErrorCode.OperationFailed, "Characteristic does not support read.");
@@ -34,6 +43,9 @@ public class WindowsBleCharacteristic : IBleCharacteristic
         return ReadBytes(result.Value);
     }
 
+    /// <summary>
+    /// Writes data to the characteristic using the specified write mode.
+    /// </summary>
     public async Task WriteAsync(byte[] data, WriteType writeType = WriteType.WithResponse, CancellationToken cancellationToken = default)
     {
         var writer = new DataWriter();
@@ -49,6 +61,9 @@ public class WindowsBleCharacteristic : IBleCharacteristic
             throw new BleException(BleErrorCode.OperationFailed, $"Write failed: {status}");
     }
 
+    /// <summary>
+    /// Starts notifications for the characteristic and registers a handler.
+    /// </summary>
     public async Task StartNotificationsAsync(Action<byte[]> handler, CancellationToken cancellationToken = default)
     {
         lock (_handlerLock) { _notificationHandler = handler; }
@@ -63,6 +78,9 @@ public class WindowsBleCharacteristic : IBleCharacteristic
             throw new BleException(BleErrorCode.OperationFailed, $"Failed to enable notifications: {status}");
     }
 
+    /// <summary>
+    /// Stops notifications for the characteristic.
+    /// </summary>
     public async Task StopNotificationsAsync(CancellationToken cancellationToken = default)
     {
         _characteristic.ValueChanged -= OnValueChanged;

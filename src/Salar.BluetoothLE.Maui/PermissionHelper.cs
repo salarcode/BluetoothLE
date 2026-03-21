@@ -1,5 +1,8 @@
-﻿namespace Salar.BluetoothLE.Maui;
+namespace Salar.BluetoothLE.Maui;
 
+/// <summary>
+/// Provides .NET MAUI helpers for checking and requesting Bluetooth-related permissions.
+/// </summary>
 public static class PermissionHelper
 {
 
@@ -12,6 +15,9 @@ public static class PermissionHelper
 		= new();
 #endif
 
+    /// <summary>
+    /// Checks whether Bluetooth permission is currently granted.
+    /// </summary>
     public static async Task<bool> CheckBluetoothStatus()
     {
         try
@@ -26,6 +32,9 @@ public static class PermissionHelper
         }
     }
 
+    /// <summary>
+    /// Requests Bluetooth permission from the user.
+    /// </summary>
     public static async Task<bool> RequestBluetoothAccess()
     {
         try
@@ -47,6 +56,9 @@ public static class PermissionHelper
 
     public static Func<bool>? NotificationReaderPermissionCheckDelegate { get; internal set; }
 
+    /// <summary>
+    /// Checks whether notification reader access is available.
+    /// </summary>
     public static bool CheckNotificationReaderAccess()
     {
         if (NotificationReaderPermissionCheckDelegate == null)
@@ -57,6 +69,9 @@ public static class PermissionHelper
         return NotificationReaderPermissionCheckDelegate();
     }
 
+    /// <summary>
+    /// Requests notification reader access through the registered delegate.
+    /// </summary>
     public static void RequestNotificationReaderAccess()
     {
         RequestNotificationReaderCheckDelegate?.Invoke();

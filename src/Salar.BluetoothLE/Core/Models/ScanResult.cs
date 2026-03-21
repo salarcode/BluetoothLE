@@ -1,5 +1,8 @@
 namespace Salar.BluetoothLE.Core.Models;
 
+/// <summary>
+/// Represents a BLE advertisement discovered during scanning.
+/// </summary>
 public sealed class ScanResult
 {
     public string? Name { get; init; }
@@ -11,6 +14,9 @@ public sealed class ScanResult
     public bool IsConnectable { get; init; }
     public DateTimeOffset Timestamp { get; init; } = DateTimeOffset.UtcNow;
 
+    /// <summary>
+    /// Returns a string representation of the scan result.
+    /// </summary>
     public override string ToString() =>
         $"ScanResult {{ Name={Name ?? "(unknown)"}, Address={Address}, Rssi={Rssi}, Connectable={IsConnectable} }}";
 }

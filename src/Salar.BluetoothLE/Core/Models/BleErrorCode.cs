@@ -1,5 +1,8 @@
 namespace Salar.BluetoothLE.Core.Models;
 
+/// <summary>
+/// Defines error codes returned by BLE operations.
+/// </summary>
 public enum BleErrorCode
 {
     None,

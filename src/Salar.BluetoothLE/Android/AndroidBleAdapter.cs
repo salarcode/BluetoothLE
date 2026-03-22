@@ -19,9 +19,13 @@ public class AndroidBleAdapter : BleAdapterBase
     private readonly BluetoothManager _bluetoothManager;
     private readonly BluetoothAdapter _bluetoothAdapter;
     private readonly Context _context;
+    private readonly Context _receiverContext;
+    private readonly object _scanLock = new();
     private BluetoothLeScanner? _scanner;
     private AndroidScanCallback? _scanCallback;
     private CancellationTokenSource? _scanCts;
+    private BluetoothStateBroadcastReceiver? _bluetoothStateReceiver;
+    private long _scanSessionId;
     private readonly Dictionary<string, AndroidBleDevice> _deviceCache = new();
     private readonly object _cacheLock = new();
     private readonly Subject<Exception> _scanErrorSubject = new();
@@ -32,9 +36,11 @@ public class AndroidBleAdapter : BleAdapterBase
     public AndroidBleAdapter(Context context)
     {
         _context = context;
+        _receiverContext = context.ApplicationContext ?? context;
         _bluetoothManager = (BluetoothManager)context.GetSystemService(Context.BluetoothService)!;
         _bluetoothAdapter = _bluetoothManager.Adapter!;
         UpdateAdapterState();
+        RegisterBluetoothStateReceiver();
     }
 
     private void UpdateAdapterState()
@@ -62,19 +68,20 @@ public class AndroidBleAdapter : BleAdapterBase
     /// </summary>
     public override async Task StartScanAsync(ScanConfig? config = null, CancellationToken cancellationToken = default)
     {
+        UpdateAdapterState();
         if (AdapterState != BleAdapterState.PoweredOn)
             throw new BleException(BleErrorCode.NotPoweredOn);
 
         config ??= ScanConfig.Default;
 
-        if (LibraryState == BleLibraryState.Scanning)
+        if (HasActiveScan())
             await StopScanAsync(cancellationToken);
 
-        _scanner = _bluetoothAdapter.BluetoothLeScanner;
-        if (_scanner == null)
+        var scanner = _bluetoothAdapter.BluetoothLeScanner;
+        if (scanner == null)
             throw new BleException(BleErrorCode.ScanFailed, "Unable to get BLE scanner.");
 
-        _scanCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
+        var scanCts = CancellationTokenSource.CreateLinkedTokenSource(cancellationToken);
 
         var settingsBuilder = new ScanSettings.Builder()!
             .SetScanMode(ToAndroidScanModeLE(config.ScanMode))!;
@@ -92,17 +99,25 @@ public class AndroidBleAdapter : BleAdapterBase
                 .ToList()
             : null;
 
-        _scanCallback = new AndroidScanCallback(
+        var scanCallback = new AndroidScanCallback(
             PublishScanResult,
             errorCode => _scanErrorSubject.OnNext(new BleException(BleErrorCode.ScanFailed, $"Scan failed with code: {errorCode}"))
         );
 
+        long scanSessionId;
+        lock (_scanLock)
+        {
+            _scanner = scanner;
+            _scanCts = scanCts;
+            _scanCallback = scanCallback;
+            scanSessionId = ++_scanSessionId;
+        }
+
         LibraryState = BleLibraryState.Scanning;
 
-        _scanner.StartScan(filters ?? [], settings, _scanCallback);
+        scanner.StartScan(filters ?? [], settings, scanCallback);
 
-        _ = Task.Delay(config.Duration, _scanCts.Token)
-            .ContinueWith(async _ => await StopScanAsync(CancellationToken.None), TaskContinuationOptions.NotOnCanceled);
+        _ = StopScanAfterDelayAsync(config.Duration, scanSessionId, scanCts.Token);
     }
 
     /// <summary>
@@ -110,16 +125,7 @@ public class AndroidBleAdapter : BleAdapterBase
     /// </summary>
     public override Task StopScanAsync(CancellationToken cancellationToken = default)
     {
-        if (LibraryState != BleLibraryState.Scanning) return Task.CompletedTask;
-
-        if (_scanCallback != null)
-            _scanner?.StopScan(_scanCallback);
-
-        _scanCts?.Cancel();
-        _scanCts?.Dispose();
-        _scanCts = null;
-        _scanCallback = null;
-        LibraryState = BleLibraryState.Idle;
+        StopScanInternal();
         return Task.CompletedTask;
     }
 
@@ -128,6 +134,10 @@ public class AndroidBleAdapter : BleAdapterBase
     /// </summary>
     public override async Task<IBleDevice> ConnectAsync(string address, ConnectionConfig? config = null, CancellationToken cancellationToken = default)
     {
+        if (HasActiveScan())
+            await StopScanAsync(cancellationToken);
+
+        UpdateAdapterState();
         if (AdapterState != BleAdapterState.PoweredOn)
             throw new BleException(BleErrorCode.NotPoweredOn);
 
@@ -206,11 +216,103 @@ public class AndroidBleAdapter : BleAdapterBase
         _ => ScanMode.Balanced
     };
 
+    private bool HasActiveScan()
+    {
+        lock (_scanLock)
+            return _scanner != null || _scanCallback != null || _scanCts != null;
+    }
+
+    private async Task StopScanAfterDelayAsync(TimeSpan duration, long scanSessionId, CancellationToken cancellationToken)
+    {
+        try
+        {
+            await Task.Delay(duration, cancellationToken).ConfigureAwait(false);
+            StopScanInternal(scanSessionId);
+        }
+        catch (System.OperationCanceledException ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error while stopping Bluetooth LE scan: {ex}");
+        }
+    }
+
+    private void StopScanInternal(long? expectedScanSessionId = null)
+    {
+        BluetoothLeScanner? scanner;
+        AndroidScanCallback? scanCallback;
+        CancellationTokenSource? scanCts;
+
+        lock (_scanLock)
+        {
+            if (expectedScanSessionId.HasValue && expectedScanSessionId.Value != _scanSessionId)
+                return;
+
+            scanner = _scanner;
+            scanCallback = _scanCallback;
+            scanCts = _scanCts;
+
+            if (scanner == null && scanCallback == null && scanCts == null)
+                return;
+
+            _scanner = null;
+            _scanCallback = null;
+            _scanCts = null;
+        }
+
+        try
+        {
+            scanCts?.Cancel();
+            if (scanCallback != null)
+                scanner?.StopScan(scanCallback);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error while stopping Bluetooth LE scan: {ex}");
+            _scanErrorSubject.OnNext(new BleException(BleErrorCode.ScanFailed, "Failed to stop the active BLE scan.", ex));
+        }
+        finally
+        {
+            scanCts?.Dispose();
+            LibraryState = BleLibraryState.Idle;
+        }
+    }
+
+    private void RegisterBluetoothStateReceiver()
+    {
+        _bluetoothStateReceiver = new BluetoothStateBroadcastReceiver(OnBluetoothStateChanged);
+        var filter = new IntentFilter(BluetoothAdapter.ActionStateChanged);
+
+        if (Build.VERSION.SdkInt >= BuildVersionCodes.Tiramisu)
+            _receiverContext.RegisterReceiver(_bluetoothStateReceiver, filter, ReceiverFlags.NotExported);
+        else
+            _receiverContext.RegisterReceiver(_bluetoothStateReceiver, filter);
+    }
+
+    private void OnBluetoothStateChanged()
+    {
+        UpdateAdapterState();
+
+        if (AdapterState != BleAdapterState.PoweredOn)
+            StopScanInternal();
+    }
+
     protected override void Dispose(bool disposing)
     {
         if (disposing)
         {
             StopScanAsync().GetAwaiter().GetResult();
+            if (_bluetoothStateReceiver != null)
+            {
+                try
+                {
+                    _receiverContext.UnregisterReceiver(_bluetoothStateReceiver);
+                }
+                catch (Java.Lang.IllegalArgumentException ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Bluetooth state receiver was already unregistered. This can happen if the Android context has already torn it down. {ex}");
+                }
+
+                _bluetoothStateReceiver = null;
+            }
             lock (_cacheLock)
             {
                 foreach (var device in _deviceCache.Values)
@@ -221,5 +323,21 @@ public class AndroidBleAdapter : BleAdapterBase
             _scanErrorSubject.Dispose();
         }
         base.Dispose(disposing);
+    }
+
+    private sealed class BluetoothStateBroadcastReceiver : BroadcastReceiver
+    {
+        private readonly Action _onStateChanged;
+
+        public BluetoothStateBroadcastReceiver(Action onStateChanged)
+        {
+            _onStateChanged = onStateChanged;
+        }
+
+        public override void OnReceive(Context? context, Intent? intent)
+        {
+            if (intent?.Action == BluetoothAdapter.ActionStateChanged)
+                _onStateChanged();
+        }
     }
 }

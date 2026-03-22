@@ -28,6 +28,7 @@ public class AndroidBleDevice : IBleDevice
     private TaskCompletionSource<bool>? _writeTcs;
     private TaskCompletionSource<bool>? _descriptorWriteTcs;
     private TaskCompletionSource<int>? _mtuTcs;
+    private static readonly TimeSpan DisconnectSettleDelay = TimeSpan.FromMilliseconds(300);
 
     private readonly Dictionary<Guid, Action<byte[]>> _notificationHandlers = new();
     private List<IBleService>? _services;
@@ -228,6 +229,11 @@ public class AndroidBleDevice : IBleDevice
         finally
         {
             _disconnectTcs = null;
+            // Some Android stacks keep the device effectively "stuck" until the
+            // next adapter reset unless the GATT cache is refreshed and the
+            // stack gets a brief moment to settle before Close().
+            TryRefreshGatt(_gatt);
+            await Task.Delay(DisconnectSettleDelay).ConfigureAwait(false);
             _gatt.Close();
             _gatt = null;
             _services = null;
@@ -302,9 +308,26 @@ public class AndroidBleDevice : IBleDevice
         if (_disposed) return;
         _disposed = true;
         _gatt?.Disconnect();
+        TryRefreshGatt(_gatt);
         _gatt?.Close();
         _gatt = null;
         _stateSubject.OnCompleted();
         _stateSubject.Dispose();
+    }
+
+    private static void TryRefreshGatt(BluetoothGatt? gatt)
+    {
+        if (gatt == null)
+            return;
+
+        try
+        {
+            var refreshMethod = gatt.Class?.GetMethod("refresh");
+            refreshMethod?.Invoke(gatt);
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error while refreshing Bluetooth GATT cache: {ex}");
+        }
     }
 }

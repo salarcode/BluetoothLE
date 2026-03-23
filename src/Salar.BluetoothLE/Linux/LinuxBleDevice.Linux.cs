@@ -80,9 +80,6 @@ public sealed class LinuxBleDevice : IBleDevice
             SetState(BleDeviceState.Failed);
             throw new BleException(BleErrorCode.ConnectionFailed, ex.Message, ex);
         }
-
-        if (config.RequestMtu is int requestedMtu && requestedMtu > _mtu)
-            _mtu = requestedMtu;
     }
 
     /// <summary>
@@ -145,12 +142,7 @@ public sealed class LinuxBleDevice : IBleDevice
     /// Requests the specified MTU for the BLE connection.
     /// </summary>
     public Task<int> RequestMtuAsync(int mtu, CancellationToken cancellationToken = default)
-    {
-        if (mtu > _mtu)
-            _mtu = mtu;
-
-        return Task.FromResult(_mtu);
-    }
+        => Task.FromResult(_mtu);
 
     private Task OnConnectedAsync(Device sender, BlueZEventArgs eventArgs)
     {

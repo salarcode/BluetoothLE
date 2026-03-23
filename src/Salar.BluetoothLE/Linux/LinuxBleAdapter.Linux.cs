@@ -312,15 +312,30 @@ public sealed class LinuxBleAdapter : BleAdapterBase
         var result = new Dictionary<ushort, byte[]>();
         foreach (var (key, value) in manufacturerData)
         {
-            result[key] = value switch
-            {
-                byte[] bytes => bytes,
-                IReadOnlyList<byte> bytes => bytes.ToArray(),
-                _ => []
-            };
+            if (TryConvertManufacturerPayload(value, out var bytes))
+                result[key] = bytes;
         }
 
         return result;
+    }
+
+    private static bool TryConvertManufacturerPayload(object? value, out byte[] bytes)
+    {
+        switch (value)
+        {
+            case byte[] array:
+                bytes = array;
+                return true;
+            case IReadOnlyList<byte> list:
+                bytes = list.ToArray();
+                return true;
+            case IEnumerable<byte> enumerable:
+                bytes = enumerable.ToArray();
+                return true;
+            default:
+                bytes = Array.Empty<byte>();
+                return false;
+        }
     }
 
     protected override void Dispose(bool disposing)

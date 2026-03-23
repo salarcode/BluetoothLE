@@ -126,8 +126,8 @@ Invoke-Cmd 'Build Salar.BluetoothLE.Maui (Release)' {
 if (-not $SkipTests) {
     $testProj = Join-Path $repoRoot 'tests/Salar.BluetoothLE.Tests/Salar.BluetoothLE.Tests.csproj'
     if (Test-Path $testProj) {
-        Invoke-Cmd 'Run tests' {
-            dotnet test $testProj --configuration Release
+        Invoke-Cmd 'Run tests (net10.0-windows)' {
+            dotnet test $testProj --configuration Release --framework net10.0-windows10.0.19041.0
         }
     }
     else {

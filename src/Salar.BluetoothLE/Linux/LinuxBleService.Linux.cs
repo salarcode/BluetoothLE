@@ -1,6 +1,5 @@
-using global::Linux.Bluetooth;
-using global::Linux.Bluetooth.Extensions;
 using Salar.BluetoothLE.Core.Interfaces;
+using Salar.BluetoothLE.Linux.BlueZ;
 
 namespace Salar.BluetoothLE.Linux;
 
@@ -9,13 +8,13 @@ namespace Salar.BluetoothLE.Linux;
 /// </summary>
 public sealed class LinuxBleService : IBleService, IDisposable
 {
-    private readonly IGattService1 _service;
+    private readonly GattService _service;
     private List<IBleCharacteristic>? _characteristics;
 
     /// <summary>
     /// Initializes a new LinuxBleService instance.
     /// </summary>
-    public LinuxBleService(IGattService1 service, Guid uuid)
+    internal LinuxBleService(GattService service, Guid uuid)
     {
         _service = service;
         Uuid = uuid;

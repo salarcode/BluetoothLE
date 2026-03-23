@@ -1,7 +1,7 @@
-using global::Linux.Bluetooth;
 using Salar.BluetoothLE.Core.Enums;
 using Salar.BluetoothLE.Core.Interfaces;
 using Salar.BluetoothLE.Core.Models;
+using Salar.BluetoothLE.Linux.BlueZ;
 
 namespace Salar.BluetoothLE.Linux;
 
@@ -21,7 +21,7 @@ public sealed class LinuxBleCharacteristic : IBleCharacteristic, IDisposable
     /// <summary>
     /// Initializes a new LinuxBleCharacteristic instance.
     /// </summary>
-    public LinuxBleCharacteristic(GattCharacteristic characteristic, Guid uuid, string[] flags)
+    internal LinuxBleCharacteristic(GattCharacteristic characteristic, Guid uuid, string[] flags)
     {
         _characteristic = characteristic;
         Uuid = uuid;

@@ -1,8 +1,7 @@
-using global::Linux.Bluetooth;
-using global::Linux.Bluetooth.Extensions;
 using Salar.BluetoothLE.Core.Enums;
 using Salar.BluetoothLE.Core.Interfaces;
 using Salar.BluetoothLE.Core.Models;
+using Salar.BluetoothLE.Linux.BlueZ;
 using System.Reactive.Subjects;
 
 namespace Salar.BluetoothLE.Linux;
@@ -32,7 +31,7 @@ public sealed class LinuxBleDevice : IBleDevice
     /// <summary>
     /// Initializes a new LinuxBleDevice instance.
     /// </summary>
-    public LinuxBleDevice(Device device, Action<LinuxBleDevice> disconnectCallback, string address)
+    internal LinuxBleDevice(Device device, Action<LinuxBleDevice> disconnectCallback, string address)
     {
         _device = device;
         _disconnectCallback = disconnectCallback;

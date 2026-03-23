@@ -1,15 +1,14 @@
-using global::Linux.Bluetooth;
-using global::Linux.Bluetooth.Extensions;
 using Salar.BluetoothLE.Core.Abstractions;
 using Salar.BluetoothLE.Core.Enums;
 using Salar.BluetoothLE.Core.Interfaces;
 using Salar.BluetoothLE.Core.Models;
+using Salar.BluetoothLE.Linux.BlueZ;
 using Tmds.DBus;
 
 namespace Salar.BluetoothLE.Linux;
 
 /// <summary>
-/// Implements the BLE adapter for Linux using BlueZ over D-Bus via Linux.Bluetooth.
+/// Implements the BLE adapter for Linux using BlueZ over D-Bus.
 /// </summary>
 public sealed class LinuxBleAdapter : BleAdapterBase
 {
@@ -304,38 +303,12 @@ public sealed class LinuxBleAdapter : BleAdapterBase
         return Guid.TryParse(BlueZManager.NormalizeUUID(uuid), out var parsed) ? parsed : null;
     }
 
-    private static Dictionary<ushort, byte[]> ConvertManufacturerData(IDictionary<ushort, object>? manufacturerData)
+    private static Dictionary<ushort, byte[]> ConvertManufacturerData(IDictionary<ushort, byte[]>? manufacturerData)
     {
         if (manufacturerData == null || manufacturerData.Count == 0)
             return new Dictionary<ushort, byte[]>();
 
-        var result = new Dictionary<ushort, byte[]>();
-        foreach (var (key, value) in manufacturerData)
-        {
-            if (TryConvertManufacturerPayload(value, out var bytes))
-                result[key] = bytes;
-        }
-
-        return result;
-    }
-
-    private static bool TryConvertManufacturerPayload(object? value, out byte[] bytes)
-    {
-        switch (value)
-        {
-            case byte[] array:
-                bytes = array;
-                return true;
-            case IReadOnlyList<byte> list:
-                bytes = list.ToArray();
-                return true;
-            case IEnumerable<byte> enumerable:
-                bytes = enumerable.ToArray();
-                return true;
-            default:
-                bytes = Array.Empty<byte>();
-                return false;
-        }
+        return manufacturerData.ToDictionary(entry => entry.Key, entry => entry.Value.ToArray());
     }
 
     protected override void Dispose(bool disposing)

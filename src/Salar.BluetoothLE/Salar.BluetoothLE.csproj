@@ -43,7 +43,7 @@
 	</ItemGroup>
 
 	<ItemGroup Condition="$(TargetFramework.Contains('-')) != true">
-		<PackageReference Include="Linux.Bluetooth" Version="5.67.0" />
+		<PackageReference Include="Tmds.DBus" Version="0.20.0" />
 	</ItemGroup>
 	
 	<ItemGroup Condition="$(TargetFramework.Contains('-android')) != true">

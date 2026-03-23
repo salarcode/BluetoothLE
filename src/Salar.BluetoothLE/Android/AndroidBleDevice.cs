@@ -150,6 +150,15 @@ public class AndroidBleDevice : IBleDevice
         if (completedTask == timeoutTask)
         {
             _gatt.Disconnect();
+            try
+            {
+                _gatt.Close();
+                _gatt.Dispose();
+            }
+            catch 
+            {
+                // ignored
+            }
             throw new BleException(BleErrorCode.ConnectionTimeout);
         }
 
@@ -234,7 +243,15 @@ public class AndroidBleDevice : IBleDevice
             // stack gets a brief moment to settle before Close().
             TryRefreshGatt(_gatt);
             await Task.Delay(DisconnectSettleDelay).ConfigureAwait(false);
-            _gatt.Close();
+            try
+            {
+                _gatt.Close();
+                _gatt.Dispose();
+            }
+            catch
+            {
+                // ignored
+            }
             _gatt = null;
             _services = null;
         }
@@ -307,10 +324,35 @@ public class AndroidBleDevice : IBleDevice
     {
         if (_disposed) return;
         _disposed = true;
-        _gatt?.Disconnect();
-        TryRefreshGatt(_gatt);
-        _gatt?.Close();
+        var gatt = _gatt;
         _gatt = null;
+        _services = null;
+        _notificationHandlers.Clear();
+
+        if (gatt != null)
+        {
+            try
+            {
+                gatt.Disconnect();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error while disconnecting Bluetooth GATT during dispose: {ex}");
+            }
+
+            TryRefreshGatt(gatt);
+
+            try
+            {
+                gatt.Close();
+                gatt.Dispose();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error while closing Bluetooth GATT during dispose: {ex}");
+            }
+        }
+
         _stateSubject.OnCompleted();
         _stateSubject.Dispose();
     }

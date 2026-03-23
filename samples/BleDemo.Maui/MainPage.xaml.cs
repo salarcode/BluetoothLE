@@ -97,7 +97,7 @@ public partial class MainPage : ContentPage
             await _adapter.StartScanAsync(new ScanConfig
             {
                 Duration = TimeSpan.FromSeconds(10),
-                ScanMode = ScanMode.LowPower,
+                ScanMode = ScanMode.Balanced,
                 AllowDuplicates = false,
                 AndroidLegacyScan = false,
             });

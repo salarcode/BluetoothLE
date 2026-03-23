@@ -178,6 +178,7 @@ public class AndroidBleAdapter : BleAdapterBase
                         _deviceCache.Remove(address);
                     stateChangedSub?.Dispose();
                     stateChangedSub = null;
+                    device.Dispose();
                 }
             });
         }

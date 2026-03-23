@@ -1,14 +1,16 @@
 using BleDemo.Console.UI;
+using Salar.BluetoothLE.Core.Abstractions;
 using Salar.BluetoothLE.Core.Enums;
 using Salar.BluetoothLE.Core.Interfaces;
 using Salar.BluetoothLE.Core.Models;
+#if WINDOWS
 using Salar.BluetoothLE.Windows;
+#endif
 
 // ── Bootstrap ─────────────────────────────────────────────────────────────────
-// WindowsBleAdapter uses the Windows 10+ WinRT Bluetooth LE APIs to scan for
-// and connect to real BLE hardware.  Run this app on a Windows machine with a
-// Bluetooth adapter to interact with physical BLE devices.
-using var adapter = new WindowsBleAdapter();
+// This sample uses the native platform adapter so it can talk to real BLE
+// hardware on both Windows and Linux.
+using var adapter = CreateAdapter();
 
 // Discovered devices accumulated during the scan
 var scanResults = new Dictionary<string, ScanResult>(StringComparer.OrdinalIgnoreCase);
@@ -22,7 +24,7 @@ using var scanSub = adapter.ScanResultReceived.Subscribe(r =>
 // ── Main loop ─────────────────────────────────────────────────────────────────
 System.Console.Title = "BLE Demo";
 ConsoleUi.PrintHeader("BLE Library — Interactive Console Demo");
-ConsoleUi.Dim("Adapter: WindowsBleAdapter  (real BLE hardware via Windows 10+ WinRT APIs)");
+ConsoleUi.Dim($"Adapter: {adapter.GetType().Name}  ({GetAdapterDescription()})");
 
 while (true)
 {
@@ -410,3 +412,20 @@ static ConsoleColor RssiColor(int rssi) =>
   : rssi >= -75 ? ConsoleColor.Yellow
   : ConsoleColor.Red;
 
+static BleAdapterBase CreateAdapter()
+{
+#if WINDOWS
+    return new WindowsBleAdapter();
+#else
+    return new Salar.BluetoothLE.Linux.LinuxBleAdapter();
+#endif
+}
+
+static string GetAdapterDescription()
+{
+#if WINDOWS
+    return "real BLE hardware via Windows 10+ WinRT APIs";
+#else
+    return "real BLE hardware via BlueZ D-Bus APIs";
+#endif
+}

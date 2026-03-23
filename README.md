@@ -11,6 +11,7 @@ The library targets modern .NET applications on:
 
 - Android
 - iOS
+- Linux
 - Windows
 - .NET MAUI apps through the companion `Salar.BluetoothLE.Maui` package
 
@@ -83,6 +84,7 @@ BLE applications need platform permissions.
 
 - In .NET MAUI, use `PermissionHelper.RequestBluetoothAccess()` from `Salar.BluetoothLE.Maui`.
 - On Android, declare Bluetooth permissions in your app project. You can use the sample at [`samples/BleDemo.Maui/Platforms/Android/AndroidPermissions.cs`](./samples/BleDemo.Maui/Platforms/Android/AndroidPermissions.cs) as a starting point.
+- On Linux, make sure BlueZ is installed and the app can access the system D-Bus Bluetooth service.
 
 ### 4. Quick start: scan, connect, and write data
 

@@ -29,6 +29,8 @@ public static class BleAdapterExtensions
 #elif WINDOWS
         new Windows.WindowsBleAdapter();
 #else
-        throw new PlatformNotSupportedException("Salar.BluetoothLE requires a supported BLE platform.");
+        OperatingSystem.IsLinux()
+            ? new Linux.LinuxBleAdapter()
+            : throw new PlatformNotSupportedException("Salar.BluetoothLE requires a supported BLE platform.");
 #endif
 }

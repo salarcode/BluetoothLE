@@ -308,7 +308,7 @@ public sealed class LinuxBleAdapter : BleAdapterBase
         if (manufacturerData == null || manufacturerData.Count == 0)
             return new Dictionary<ushort, byte[]>();
 
-        return manufacturerData.ToDictionary(entry => entry.Key, entry => entry.Value.ToArray());
+        return manufacturerData.ToDictionary(entry => entry.Key, entry => entry.Value);
     }
 
     protected override void Dispose(bool disposing)

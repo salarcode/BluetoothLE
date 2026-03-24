@@ -55,7 +55,28 @@ dotnet add package Salar.BluetoothLE
 dotnet add package Salar.BluetoothLE.Maui
 ```
 
-### 2. Register the BLE adapter in a MAUI app
+### 2. Choose the correct TFM for your platform
+
+`Salar.BluetoothLE` ships different implementations per target framework. If your app targets plain `net9.0` or `net10.0`, that is the generic target and it is intended for Linux/non-platform-specific usage. It will not light up the Android, iOS, or Windows implementations.
+
+Use a platform TFM that matches your app:
+
+| Platform | Use one of these TFMs |
+| --- | --- |
+| Linux | `net9.0` or `net10.0` |
+| Android | `net9.0-android` or `net10.0-android` |
+| iOS | `net9.0-ios` or `net10.0-ios` |
+| Windows | `net9.0-windows10.0.19041.0` or `net10.0-windows10.0.19041.0` |
+
+Examples:
+
+- a console app on Linux can target `net10.0`
+- an Android app must target `net10.0-android`
+- a Windows desktop app must target `net10.0-windows10.0.19041.0`
+
+If you are using .NET MAUI, your app should multi-target the platform TFMs you want to support, such as `net10.0-android`, `net10.0-ios`, and `net10.0-windows10.0.19041.0`.
+
+### 3. Register the BLE adapter in a MAUI app
 
 If you are using .NET MAUI, register the adapter in `MauiProgram.cs`:
 
@@ -78,7 +99,7 @@ public static class MauiProgram
 }
 ```
 
-### 3. Configure permissions
+### 4. Configure permissions
 
 BLE applications need platform permissions.
 
@@ -127,7 +148,7 @@ The Linux implementation talks directly to the system BlueZ service over D-Bus. 
 
 If Linux setup is incomplete, the library may report unavailable access or fail to find any Bluetooth adapters.
 
-### 4. Quick start: scan, connect, and write data
+### 5. Quick start: scan, connect, and write data
 
 The example below shows a typical BLE flow:
 

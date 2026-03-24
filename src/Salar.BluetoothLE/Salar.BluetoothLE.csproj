@@ -79,8 +79,8 @@
 	</ItemGroup>
 	
 	<ItemGroup Condition="$(TargetFramework.Contains('-')) == true">
-		<Compile Remove="**\*.Linux.cs" />
-		<None Include="**\*.Linux.cs" Exclude="$(DefaultItemExcludes);$(DefaultExcludesInProjectFolder)" />
+		<Compile Remove="Linux\**\*" />
+		<None Include="Linux\**\*" Exclude="$(DefaultItemExcludes);$(DefaultExcludesInProjectFolder)" />
 	</ItemGroup>
 	
 	<ItemGroup Condition="'$(Configuration)' == 'Debug'">

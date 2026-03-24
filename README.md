@@ -84,7 +84,48 @@ BLE applications need platform permissions.
 
 - In .NET MAUI, use `PermissionHelper.RequestBluetoothAccess()` from `Salar.BluetoothLE.Maui`.
 - On Android, declare Bluetooth permissions in your app project. You can use the sample at [`samples/BleDemo.Maui/Platforms/Android/AndroidPermissions.cs`](./samples/BleDemo.Maui/Platforms/Android/AndroidPermissions.cs) as a starting point.
-- On Linux, make sure BlueZ is installed and the app can access the system D-Bus Bluetooth service.
+- On Linux, install BlueZ, make sure the `bluetooth` service is running, and make sure the app can access the system D-Bus Bluetooth service.
+
+#### Linux prerequisites
+
+The Linux implementation talks directly to the system BlueZ service over D-Bus. Before running a Linux app with `Salar.BluetoothLE`, make sure the host is set up correctly:
+
+1. Install the Bluetooth stack packages for your distro.
+   - Debian/Ubuntu example:
+
+     ```bash
+     sudo apt-get update
+     sudo apt-get install -y bluez dbus
+     ```
+
+   - Other distros should install their equivalent BlueZ and D-Bus packages.
+
+2. Make sure the Bluetooth daemon is running.
+
+   ```bash
+   sudo systemctl enable --now bluetooth
+   sudo systemctl status bluetooth
+   ```
+
+3. Make sure the machine actually has a Bluetooth adapter and that Linux can see it.
+
+   ```bash
+   bluetoothctl list
+   ```
+
+   If no adapter is listed, check your hardware, kernel drivers, or USB Bluetooth dongle support first.
+
+4. Make sure Bluetooth is powered on.
+
+   ```bash
+   bluetoothctl power on
+   ```
+
+5. Run the app in an environment that can access the system D-Bus.
+   - On a normal Linux host, this usually just means running as a user that can talk to the system bus.
+   - In containers, minimal VMs, or CI environments, BlueZ and the system D-Bus socket may be missing even if the app itself builds successfully.
+
+If Linux setup is incomplete, the library may report unavailable access or fail to find any Bluetooth adapters.
 
 ### 4. Quick start: scan, connect, and write data
 

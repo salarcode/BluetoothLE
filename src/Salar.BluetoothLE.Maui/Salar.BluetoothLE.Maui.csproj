@@ -11,7 +11,7 @@
 		<RootNamespace>Salar.BluetoothLE.Maui</RootNamespace>
 		<AssemblyName>Salar.BluetoothLE.Maui</AssemblyName>
 		<PackageId>Salar.BluetoothLE.Maui</PackageId>
-		<Version>1.0.0</Version>
+		<Version>1.1.0</Version>
 		<Authors>Salar.K</Authors>
 		<Copyright>Copyright (c) Salar.K</Copyright>
 		<Description>MAUI companion package for Salar.BluetoothLE. Provides DI registration helpers and Bluetooth permission utilities for .NET MAUI applications on Android, iOS, and Windows.</Description>

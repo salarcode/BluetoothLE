@@ -11,6 +11,7 @@ The library targets modern .NET applications on:
 
 - Android
 - iOS
+- Linux
 - Windows
 - .NET MAUI apps through the companion `Salar.BluetoothLE.Maui` package
 
@@ -54,7 +55,28 @@ dotnet add package Salar.BluetoothLE
 dotnet add package Salar.BluetoothLE.Maui
 ```
 
-### 2. Register the BLE adapter in a MAUI app
+### 2. Choose the correct TFM for your platform
+
+`Salar.BluetoothLE` ships different implementations per target framework. If your app targets plain `net9.0` or `net10.0`, that is the generic target and it is intended for Linux/non-platform-specific usage. It will not light up the Android, iOS, or Windows implementations.
+
+Use a platform TFM that matches your app:
+
+| Platform | Use one of these TFMs |
+| --- | --- |
+| Linux | `net9.0` or `net10.0` |
+| Android | `net9.0-android` or `net10.0-android` |
+| iOS | `net9.0-ios` or `net10.0-ios` |
+| Windows | `net9.0-windows10.0.19041.0` or `net10.0-windows10.0.19041.0` |
+
+Examples:
+
+- a console app on Linux can target `net10.0`
+- an Android app must target `net10.0-android`
+- a Windows desktop app must target `net10.0-windows10.0.19041.0`
+
+If you are using .NET MAUI, your app should multi-target the platform TFMs you want to support, such as `net10.0-android`, `net10.0-ios`, and `net10.0-windows10.0.19041.0`.
+
+### 3. Register the BLE adapter in a MAUI app
 
 If you are using .NET MAUI, register the adapter in `MauiProgram.cs`:
 
@@ -77,14 +99,56 @@ public static class MauiProgram
 }
 ```
 
-### 3. Configure permissions
+### 4. Configure permissions
 
 BLE applications need platform permissions.
 
 - In .NET MAUI, use `PermissionHelper.RequestBluetoothAccess()` from `Salar.BluetoothLE.Maui`.
 - On Android, declare Bluetooth permissions in your app project. You can use the sample at [`samples/BleDemo.Maui/Platforms/Android/AndroidPermissions.cs`](./samples/BleDemo.Maui/Platforms/Android/AndroidPermissions.cs) as a starting point.
+- On Linux, install BlueZ, make sure the `bluetooth` service is running, and make sure the app can access the system D-Bus Bluetooth service.
 
-### 4. Quick start: scan, connect, and write data
+#### Linux prerequisites
+
+The Linux implementation talks directly to the system BlueZ service over D-Bus. Before running a Linux app with `Salar.BluetoothLE`, make sure the host is set up correctly:
+
+1. Install the Bluetooth stack packages for your distro.
+   - Debian/Ubuntu example:
+
+     ```bash
+     sudo apt-get update
+     sudo apt-get install -y bluez dbus
+     ```
+
+   - Other distros should install their equivalent BlueZ and D-Bus packages.
+
+2. Make sure the Bluetooth daemon is running.
+
+   ```bash
+   sudo systemctl enable --now bluetooth
+   sudo systemctl status bluetooth
+   ```
+
+3. Make sure the machine actually has a Bluetooth adapter and that Linux can see it.
+
+   ```bash
+   bluetoothctl list
+   ```
+
+   If no adapter is listed, check your hardware, kernel drivers, or USB Bluetooth dongle support first.
+
+4. Make sure Bluetooth is powered on.
+
+   ```bash
+   bluetoothctl power on
+   ```
+
+5. Run the app in an environment that can access the system D-Bus.
+   - On a normal Linux host, this usually just means running as a user that can talk to the system bus.
+   - In containers, minimal VMs, or CI environments, BlueZ and the system D-Bus socket may be missing even if the app itself builds successfully.
+
+If Linux setup is incomplete, the library may report unavailable access or fail to find any Bluetooth adapters.
+
+### 5. Quick start: scan, connect, and write data
 
 The example below shows a typical BLE flow:
 

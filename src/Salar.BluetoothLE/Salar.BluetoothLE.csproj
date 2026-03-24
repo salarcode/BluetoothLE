@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
 	<PropertyGroup>
-		<TargetFrameworks>net9.0-android;net9.0-ios;net10.0-android;net10.0-ios</TargetFrameworks>
+		<TargetFrameworks>net9.0;net9.0-android;net9.0-ios;net10.0;net10.0-android;net10.0-ios</TargetFrameworks>
 		<TargetFrameworks Condition="$([MSBuild]::IsOSPlatform('windows'))">$(TargetFrameworks);net9.0-windows10.0.19041.0;net10.0-windows10.0.19041.0</TargetFrameworks>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<Nullable>enable</Nullable>
@@ -10,11 +10,11 @@
 		<RootNamespace>Salar.BluetoothLE</RootNamespace>
 		<AssemblyName>Salar.BluetoothLE</AssemblyName>
 		<PackageId>Salar.BluetoothLE</PackageId>
-		<Version>1.0.0</Version>
+		<Version>1.1.0</Version>
 		<Authors>Salar.K</Authors>
 		<Copyright>Copyright (c) Salar.K</Copyright>
-		<Description>A cross-platform Bluetooth Low Energy (BLE) library for .NET. Provides a clean, task-based API for scanning, connecting, discovering GATT services and characteristics, reading, writing, and subscribing to notifications on Android, iOS, and Windows.</Description>
-		<PackageTags>bluetooth;ble;bluetooth-le;android;ios;windows;dotnet;gatt</PackageTags>
+		<Description>A cross-platform Bluetooth Low Energy (BLE) library for .NET. Provides a clean, task-based API for scanning, connecting, discovering GATT services and characteristics, reading, writing, and subscribing to notifications on Android, iOS, Linux, and Windows.</Description>
+		<PackageTags>bluetooth;ble;bluetooth-le;android;ios;linux;windows;dotnet;gatt</PackageTags>
 		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 		<PackageReadmeFile>README.md</PackageReadmeFile>
 		<PackageProjectUrl>https://github.com/salarcode/BluetoothLE</PackageProjectUrl>
@@ -40,6 +40,10 @@
 	<ItemGroup>
 		<PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="8.0.2" />
 		<PackageReference Include="System.Reactive" Version="6.1.0" />
+	</ItemGroup>
+
+	<ItemGroup Condition="$(TargetFramework.Contains('-')) != true">
+		<PackageReference Include="Tmds.DBus" Version="0.20.0" />
 	</ItemGroup>
 	
 	<ItemGroup Condition="$(TargetFramework.Contains('-android')) != true">
@@ -74,9 +78,9 @@
 		<None Include="NonWindows\**\*" Exclude="$(DefaultItemExcludes);$(DefaultExcludesInProjectFolder)" />
 	</ItemGroup>
 	
-	<ItemGroup Condition="$(TargetFramework.Contains('-linux')) != true">
-		<Compile Remove="**\*.Linux.cs" />
-		<None Include="**\*.Linux.cs" Exclude="$(DefaultItemExcludes);$(DefaultExcludesInProjectFolder)" />
+	<ItemGroup Condition="$(TargetFramework.Contains('-')) == true">
+		<Compile Remove="Linux\**\*" />
+		<None Include="Linux\**\*" Exclude="$(DefaultItemExcludes);$(DefaultExcludesInProjectFolder)" />
 	</ItemGroup>
 	
 	<ItemGroup Condition="'$(Configuration)' == 'Debug'">

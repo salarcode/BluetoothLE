@@ -10,7 +10,7 @@
 		<RootNamespace>Salar.BluetoothLE</RootNamespace>
 		<AssemblyName>Salar.BluetoothLE</AssemblyName>
 		<PackageId>Salar.BluetoothLE</PackageId>
-		<Version>1.1.0</Version>
+		<Version>1.2.0</Version>
 		<Authors>Salar.K</Authors>
 		<Copyright>Copyright (c) Salar.K</Copyright>
 		<Description>A cross-platform Bluetooth Low Energy (BLE) library for .NET. Provides a clean, task-based API for scanning, connecting, discovering GATT services and characteristics, reading, writing, and subscribing to notifications on Android, iOS, Linux, and Windows.</Description>

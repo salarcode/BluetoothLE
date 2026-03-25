@@ -18,6 +18,11 @@
 	<string>This demo scans for and connects to nearby Bluetooth Low Energy devices.</string>
 	<key>NSBluetoothPeripheralUsageDescription</key>
 	<string>This demo scans for and connects to nearby Bluetooth Low Energy devices.</string>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>bluetooth-central</string>
+		<string>bluetooth-peripheral</string>
+	</array>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
 		<string>UIInterfaceOrientationPortrait</string>

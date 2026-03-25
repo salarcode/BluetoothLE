@@ -18,6 +18,8 @@ public class IosBleAdapter : BleAdapterBase
     private readonly Dictionary<string, IosBleDevice> _peripheralCache = new();
     private readonly object _cacheLock = new();
     private readonly Dictionary<string, TaskCompletionSource<bool>> _connectionTcs = new();
+    private readonly object _connectionLock = new();
+    private TaskCompletionSource<CBManagerState>? _initialStateTcs;
 
     /// <summary>
     /// Initializes a new IosBleAdapter instance.
@@ -29,6 +31,7 @@ public class IosBleAdapter : BleAdapterBase
 
     private void InitializeCentralManager()
     {
+        _initialStateTcs = new(TaskCreationOptions.RunContinuationsAsynchronously);
         _centralManagerDelegate = new IosCentralManagerDelegate();
         _centralManagerDelegate.StateUpdated += OnStateUpdated;
         _centralManagerDelegate.OnDiscoveredPeripheral += OnDiscoveredPeripheral;
@@ -49,6 +52,8 @@ public class IosBleAdapter : BleAdapterBase
             CBManagerState.Resetting => BleAdapterState.Resetting,
             _ => BleAdapterState.Unknown
         };
+
+        _initialStateTcs?.TrySetResult(central.State);
     }
 
     private void OnDiscoveredPeripheral(CBCentralManager central, CBPeripheral peripheral, NSDictionary advertisementData, NSNumber rssi)
@@ -95,8 +100,14 @@ public class IosBleAdapter : BleAdapterBase
         var id = peripheral.Identifier.ToString();
         if (_peripheralCache.TryGetValue(id, out var device))
             device.SetConnected();
-        if (_connectionTcs.TryGetValue(id, out var tcs))
-            tcs.TrySetResult(true);
+
+        TaskCompletionSource<bool>? tcs = null;
+        lock (_connectionLock)
+        {
+            if (_connectionTcs.TryGetValue(id, out tcs))
+                _connectionTcs.Remove(id);
+        }
+        tcs?.TrySetResult(true);
     }
 
     private void OnFailedToConnect(CBCentralManager central, CBPeripheral peripheral, NSError? error)
@@ -104,8 +115,14 @@ public class IosBleAdapter : BleAdapterBase
         var id = peripheral.Identifier.ToString();
         if (_peripheralCache.TryGetValue(id, out var device))
             device.SetDisconnected();
-        if (_connectionTcs.TryGetValue(id, out var tcs))
-            tcs.TrySetException(new BleException(BleErrorCode.ConnectionFailed, error?.LocalizedDescription ?? "Connection failed."));
+
+        TaskCompletionSource<bool>? tcs = null;
+        lock (_connectionLock)
+        {
+            if (_connectionTcs.TryGetValue(id, out tcs))
+                _connectionTcs.Remove(id);
+        }
+        tcs?.TrySetException(new BleException(BleErrorCode.ConnectionFailed, error?.LocalizedDescription ?? "Connection failed."));
     }
 
     private void OnDisconnectedPeripheral(CBCentralManager central, CBPeripheral peripheral, NSError? error)
@@ -129,21 +146,36 @@ public class IosBleAdapter : BleAdapterBase
             device.SetDisconnected();
             RemoveConnectedDevice(id);
         }
+
+        TaskCompletionSource<bool>? tcs = null;
+        lock (_connectionLock)
+        {
+            if (_connectionTcs.TryGetValue(id, out tcs))
+                _connectionTcs.Remove(id);
+        }
+        tcs?.TrySetException(new BleException(BleErrorCode.ConnectionFailed, error?.LocalizedDescription ?? "Connection was interrupted."));
     }
 
     /// <summary>
     /// Requests Bluetooth access for the current platform.
     /// </summary>
-    public override Task<BlePermissionStatus> RequestAccessAsync(CancellationToken cancellationToken = default)
+    public override async Task<BlePermissionStatus> RequestAccessAsync(CancellationToken cancellationToken = default)
     {
+        if (_centralManager == null)
+            InitializeCentralManager();
+
+        if (_centralManager?.State == CBManagerState.Unknown && _initialStateTcs is { Task.IsCompleted: false } initialStateTcs)
+            await initialStateTcs.Task.WaitAsync(cancellationToken);
+
         var status = CBCentralManager.Authorization switch
         {
             CBManagerAuthorization.AllowedAlways => BlePermissionStatus.Granted,
             CBManagerAuthorization.Denied => BlePermissionStatus.Denied,
             CBManagerAuthorization.Restricted => BlePermissionStatus.Restricted,
+            CBManagerAuthorization.NotDetermined => BlePermissionStatus.Unknown,
             _ => BlePermissionStatus.Unknown
         };
-        return Task.FromResult(status);
+        return status;
     }
 
     /// <summary>
@@ -191,6 +223,8 @@ public class IosBleAdapter : BleAdapterBase
     {
         if (_centralManager == null) throw new BleException(BleErrorCode.NotSupported);
         if (AdapterState != BleAdapterState.PoweredOn) throw new BleException(BleErrorCode.NotPoweredOn);
+        if (LibraryState == BleLibraryState.Scanning)
+            await StopScanAsync(cancellationToken);
 
         config ??= ConnectionConfig.Default;
 
@@ -208,32 +242,45 @@ public class IosBleAdapter : BleAdapterBase
             }
         }
 
-        var tcs = new TaskCompletionSource<bool>();
-        _connectionTcs[address] = tcs;
+        var tcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
+        lock (_connectionLock)
+            _connectionTcs[address] = tcs;
 
         using var reg = cancellationToken.Register(() => tcs.TrySetCanceled());
 
         LibraryState = BleLibraryState.Connecting;
+        try
+        {
+            _centralManager.ConnectPeripheral(device.Peripheral);
 
-        var field = typeof(IosBleDevice).GetField("_peripheral", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
-        var peripheral = (CBPeripheral)field!.GetValue(device)!;
-        _centralManager.ConnectPeripheral(peripheral);
+            var timeoutTask = Task.Delay(config.ConnectionTimeout, cancellationToken);
+            var completedTask = await Task.WhenAny(tcs.Task, timeoutTask);
 
-        var timeoutTask = Task.Delay(config.ConnectionTimeout, cancellationToken);
-        var completedTask = await Task.WhenAny(tcs.Task, timeoutTask);
+            if (completedTask == timeoutTask)
+            {
+                _centralManager.CancelPeripheralConnection(device.Peripheral);
+                throw new BleException(BleErrorCode.ConnectionTimeout);
+            }
 
-        LibraryState = BleLibraryState.Idle;
+            await tcs.Task;
+            AddConnectedDevice(device);
 
-        if (completedTask == timeoutTask)
-            throw new BleException(BleErrorCode.ConnectionTimeout);
+            if (config.RequestMtu.HasValue)
+                await device.RequestMtuAsync(config.RequestMtu.Value, cancellationToken);
 
-        await tcs.Task;
-        AddConnectedDevice(device);
-
-        if (config.RequestMtu.HasValue)
-            await device.RequestMtuAsync(config.RequestMtu.Value, cancellationToken);
-
-        return device;
+            return device;
+        }
+        catch (OperationCanceledException)
+        {
+            _centralManager.CancelPeripheralConnection(device.Peripheral);
+            throw;
+        }
+        finally
+        {
+            LibraryState = BleLibraryState.Idle;
+            lock (_connectionLock)
+                _connectionTcs.Remove(address);
+        }
     }
 
     /// <summary>

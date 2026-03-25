@@ -104,8 +104,65 @@ public static class MauiProgram
 BLE applications need platform permissions.
 
 - In .NET MAUI, use `PermissionHelper.RequestBluetoothAccess()` from `Salar.BluetoothLE.Maui`.
-- On Android, declare Bluetooth permissions in your app project. You can use the sample at [`samples/BleDemo.Maui/Platforms/Android/AndroidPermissions.cs`](./samples/BleDemo.Maui/Platforms/Android/AndroidPermissions.cs) as a starting point.
+- On Android, declare Bluetooth permissions in your app project. You can copy [`src/Salar.BluetoothLE/Android/AndroidPermissions.cs`](./src/Salar.BluetoothLE/Android/AndroidPermissions.cs) or the sample app file at [`samples/BleDemo.Maui/Platforms/Android/AndroidPermissions.cs`](./samples/BleDemo.Maui/Platforms/Android/AndroidPermissions.cs) into your app's `Platforms/Android/AndroidPermissions.cs`.
+- On iOS, add the required Bluetooth usage descriptions to your app's `Info.plist`. If you need background BLE support, also add the CoreBluetooth background modes shown below.
 - On Linux, install BlueZ, make sure the `bluetooth` service is running, and make sure the app can access the system D-Bus Bluetooth service.
+
+#### Android requirements
+
+For a scanner/central app:
+
+- `BLUETOOTH` and `BLUETOOTH_ADMIN` are required on Android 11 / API 30 and earlier.
+- `BLUETOOTH_SCAN` and `BLUETOOTH_CONNECT` are required on Android 12 / API 31 and later.
+- `BLUETOOTH_ADVERTISE` is only needed if your app advertises/peripheral mode.
+- `ACCESS_COARSE_LOCATION` / `ACCESS_FINE_LOCATION` are only needed on Android 11 / API 30 and earlier, or when your app derives physical location from BLE results.
+- `BLUETOOTH_PRIVILEGED` should not be declared by normal third-party apps.
+
+The included `AndroidPermissions.cs` sample already declares the common scanner/client permissions for a MAUI app:
+
+```csharp
+using Android.App;
+
+[assembly: UsesPermission(Android.Manifest.Permission.AccessCoarseLocation, MaxSdkVersion = 30)]
+[assembly: UsesPermission(Android.Manifest.Permission.AccessFineLocation, MaxSdkVersion = 30)]
+[assembly: UsesPermission(Android.Manifest.Permission.Bluetooth, MaxSdkVersion = 30)]
+[assembly: UsesPermission(Android.Manifest.Permission.BluetoothAdmin, MaxSdkVersion = 30)]
+[assembly: UsesPermission(Android.Manifest.Permission.BluetoothScan)]
+[assembly: UsesPermission(Android.Manifest.Permission.BluetoothConnect)]
+```
+
+If your Android app should only install on BLE-capable devices, also declare the feature in `Platforms/Android/AndroidManifest.xml`:
+
+```xml
+<uses-feature android:name="android.hardware.bluetooth_le" android:required="true" />
+```
+
+If you are using the MAUI helper, call `PermissionHelper.RequestBluetoothAccess()` before scanning or connecting.
+
+#### iOS requirements
+
+CoreBluetooth on iOS requires Bluetooth usage descriptions in `Info.plist`. For central/client scenarios, add:
+
+```xml
+<key>NSBluetoothAlwaysUsageDescription</key>
+<string>Explain why the app needs Bluetooth access.</string>
+<key>NSBluetoothPeripheralUsageDescription</key>
+<string>Explain why the app needs Bluetooth access.</string>
+```
+
+If your app must continue BLE work in the background, also add the CoreBluetooth background modes:
+
+```xml
+<key>UIBackgroundModes</key>
+<array>
+    <string>bluetooth-central</string>
+    <string>bluetooth-peripheral</string>
+</array>
+```
+
+See the MAUI sample app for a working example at [`samples/BleDemo.Maui/Platforms/iOS/Info.plist`](./samples/BleDemo.Maui/Platforms/iOS/Info.plist).
+
+On iOS there is no separate runtime Bluetooth permission API like Android. The system prompt appears the first time the app uses CoreBluetooth, so make sure the `Info.plist` entries are present before scanning or connecting.
 
 #### Linux prerequisites
 

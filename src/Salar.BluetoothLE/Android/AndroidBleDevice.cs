@@ -33,6 +33,8 @@ public class AndroidBleDevice : IBleDevice
     private readonly Dictionary<Guid, Action<byte[]>> _notificationHandlers = new();
     private List<IBleService>? _services;
 
+    internal bool IsDisposed => _disposed;
+
     public string Id => _nativeDevice.Address ?? string.Empty;
     public string? Name => _nativeDevice.Name;
     public BleDeviceState State => _state;
@@ -58,10 +60,12 @@ public class AndroidBleDevice : IBleDevice
 
     private void OnConnectionStateChanged(BluetoothGatt gatt, ProfileState newState)
     {
+        if (!ShouldHandleGatt(gatt))
+            return;
+
         if (newState == ProfileState.Connected)
         {
-            _state = BleDeviceState.Connected;
-            _stateSubject.OnNext(_state);
+            PublishState(BleDeviceState.Connected);
             _connectionTcs?.TrySetResult(true);
         }
         else if (newState == ProfileState.Disconnected)
@@ -75,8 +79,7 @@ public class AndroidBleDevice : IBleDevice
             else
             {
                 // Unexpected disconnect (e.g. device moved out of range).
-                _state = BleDeviceState.Disconnected;
-                _stateSubject.OnNext(_state);
+                PublishState(BleDeviceState.Disconnected);
             }
             // Unblock any pending connection attempt.
             _connectionTcs?.TrySetResult(false);
@@ -85,11 +88,17 @@ public class AndroidBleDevice : IBleDevice
 
     private void OnServicesDiscovered(BluetoothGatt gatt, GattStatus status)
     {
+        if (!ShouldHandleGatt(gatt))
+            return;
+
         _serviceDiscoveryTcs?.TrySetResult(status == GattStatus.Success);
     }
 
     private void OnCharacteristicRead(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, GattStatus status)
     {
+        if (!ShouldHandleGatt(gatt))
+            return;
+
         if (status == GattStatus.Success)
             _readTcs?.TrySetResult(characteristic.GetValue() ?? Array.Empty<byte>());
         else
@@ -98,6 +107,9 @@ public class AndroidBleDevice : IBleDevice
 
     private void OnCharacteristicWritten(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic, GattStatus status)
     {
+        if (!ShouldHandleGatt(gatt))
+            return;
+
         if (status == GattStatus.Success)
             _writeTcs?.TrySetResult(true);
         else
@@ -106,6 +118,9 @@ public class AndroidBleDevice : IBleDevice
 
     private void OnCharacteristicChanged(BluetoothGatt gatt, BluetoothGattCharacteristic characteristic)
     {
+        if (!ShouldHandleGatt(gatt))
+            return;
+
         var uuid = Guid.Parse(characteristic.Uuid!.ToString()!);
         if (_notificationHandlers.TryGetValue(uuid, out var handler))
             handler(characteristic.GetValue() ?? Array.Empty<byte>());
@@ -113,6 +128,9 @@ public class AndroidBleDevice : IBleDevice
 
     private void OnDescriptorWritten(BluetoothGatt gatt, GattStatus status)
     {
+        if (!ShouldHandleGatt(gatt))
+            return;
+
         if (status == GattStatus.Success)
             _descriptorWriteTcs?.TrySetResult(true);
         else
@@ -121,6 +139,9 @@ public class AndroidBleDevice : IBleDevice
 
     private void OnMtuChanged(BluetoothGatt gatt, int mtu, GattStatus status)
     {
+        if (!ShouldHandleGatt(gatt))
+            return;
+
         if (status == GattStatus.Success)
         {
             _mtu = mtu;
@@ -134,10 +155,17 @@ public class AndroidBleDevice : IBleDevice
 
     internal async Task ConnectInternalAsync(ConnectionConfig config, CancellationToken cancellationToken)
     {
-        _state = BleDeviceState.Connecting;
-        _stateSubject.OnNext(_state);
+        ThrowIfDisposed();
 
-        _connectionTcs = new TaskCompletionSource<bool>();
+        if (_gatt != null)
+            CloseGatt(_gatt, disconnectFirst: true);
+
+        _gatt = null;
+        _services = null;
+
+        PublishState(BleDeviceState.Connecting);
+
+        _connectionTcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         using var reg = cancellationToken.Register(() => _connectionTcs.TrySetCanceled());
 
         _gatt = _nativeDevice.ConnectGatt(_context, config.AutoConnect, _gattCallback);
@@ -149,26 +177,24 @@ public class AndroidBleDevice : IBleDevice
 
         if (completedTask == timeoutTask)
         {
-            _gatt.Disconnect();
-            try
-            {
-                _gatt.Close();
-                _gatt.Dispose();
-            }
-            catch 
-            {
-                // ignored
-            }
+            CloseGatt(_gatt, disconnectFirst: true);
+            _gatt = null;
             throw new BleException(BleErrorCode.ConnectionTimeout);
         }
 
         var connected = await _connectionTcs.Task;
+        _connectionTcs = null;
         if (!connected)
+        {
+            CloseGatt(_gatt, disconnectFirst: true);
+            _gatt = null;
             throw new BleException(BleErrorCode.ConnectionFailed);
+        }
 
-        _serviceDiscoveryTcs = new TaskCompletionSource<bool>();
+        _serviceDiscoveryTcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         _gatt.DiscoverServices();
         await _serviceDiscoveryTcs.Task;
+        _serviceDiscoveryTcs = null;
 
         if (config.RequestMtu.HasValue)
             await RequestMtuAsync(config.RequestMtu.Value, cancellationToken);
@@ -179,6 +205,7 @@ public class AndroidBleDevice : IBleDevice
     /// </summary>
     public async Task<IReadOnlyList<IBleService>> GetServicesAsync(CancellationToken cancellationToken = default)
     {
+        ThrowIfDisposed();
         if (_gatt == null) throw new BleException(BleErrorCode.NotConnected);
         if (_services == null)
         {
@@ -203,18 +230,17 @@ public class AndroidBleDevice : IBleDevice
     /// </summary>
     public async Task DisconnectAsync(CancellationToken cancellationToken = default)
     {
+        if (_disposed)
+            return;
+
         if (_gatt == null)
         {
             if (_state != BleDeviceState.Disconnected)
-            {
-                _state = BleDeviceState.Disconnected;
-                _stateSubject.OnNext(_state);
-            }
+                PublishState(BleDeviceState.Disconnected);
             return;
         }
 
-        _state = BleDeviceState.Disconnecting;
-        _stateSubject.OnNext(_state);
+        PublishState(BleDeviceState.Disconnecting);
 
         _disconnectTcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         using var reg = cancellationToken.Register(() => _disconnectTcs.TrySetCanceled());
@@ -256,8 +282,7 @@ public class AndroidBleDevice : IBleDevice
             _services = null;
         }
 
-        _state = BleDeviceState.Disconnected;
-        _stateSubject.OnNext(_state);
+        PublishState(BleDeviceState.Disconnected);
     }
 
     /// <summary>
@@ -265,37 +290,62 @@ public class AndroidBleDevice : IBleDevice
     /// </summary>
     public async Task<int> RequestMtuAsync(int mtu, CancellationToken cancellationToken = default)
     {
+        ThrowIfDisposed();
         if (_gatt == null) throw new BleException(BleErrorCode.NotConnected);
-        _mtuTcs = new TaskCompletionSource<int>();
+        _mtuTcs = new TaskCompletionSource<int>(TaskCreationOptions.RunContinuationsAsynchronously);
         using var reg = cancellationToken.Register(() => _mtuTcs.TrySetCanceled());
         _gatt.RequestMtu(mtu);
-        return await _mtuTcs.Task;
+        try
+        {
+            return await _mtuTcs.Task;
+        }
+        finally
+        {
+            _mtuTcs = null;
+        }
     }
 
     internal async Task<byte[]> ReadCharacteristicAsync(BluetoothGattCharacteristic characteristic, CancellationToken cancellationToken)
     {
+        ThrowIfDisposed();
         if (_gatt == null) throw new BleException(BleErrorCode.NotConnected);
-        _readTcs = new TaskCompletionSource<byte[]>();
+        _readTcs = new TaskCompletionSource<byte[]>(TaskCreationOptions.RunContinuationsAsynchronously);
         using var reg = cancellationToken.Register(() => _readTcs.TrySetCanceled());
         _gatt.ReadCharacteristic(characteristic);
-        return await _readTcs.Task;
+        try
+        {
+            return await _readTcs.Task;
+        }
+        finally
+        {
+            _readTcs = null;
+        }
     }
 
     internal async Task WriteCharacteristicAsync(BluetoothGattCharacteristic characteristic, byte[] data, WriteType writeType, CancellationToken cancellationToken)
     {
+        ThrowIfDisposed();
         if (_gatt == null) throw new BleException(BleErrorCode.NotConnected);
         characteristic.SetValue(data);
         characteristic.WriteType = writeType == WriteType.WithoutResponse
             ? GattWriteType.NoResponse
             : GattWriteType.Default;
-        _writeTcs = new TaskCompletionSource<bool>();
+        _writeTcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
         using var reg = cancellationToken.Register(() => _writeTcs.TrySetCanceled());
         _gatt.WriteCharacteristic(characteristic);
-        await _writeTcs.Task;
+        try
+        {
+            await _writeTcs.Task;
+        }
+        finally
+        {
+            _writeTcs = null;
+        }
     }
 
     internal async Task SetCharacteristicNotificationAsync(BluetoothGattCharacteristic characteristic, bool enable, Action<byte[]>? handler, CancellationToken cancellationToken)
     {
+        ThrowIfDisposed();
         if (_gatt == null) throw new BleException(BleErrorCode.NotConnected);
         var uuid = Guid.Parse(characteristic.Uuid!.ToString()!);
 
@@ -305,10 +355,17 @@ public class AndroidBleDevice : IBleDevice
         if (descriptor != null)
         {
             descriptor.SetValue(enable ? BluetoothGattDescriptor.EnableNotificationValue!.ToArray() : BluetoothGattDescriptor.DisableNotificationValue!.ToArray());
-            _descriptorWriteTcs = new TaskCompletionSource<bool>();
+            _descriptorWriteTcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
             using var reg = cancellationToken.Register(() => _descriptorWriteTcs.TrySetCanceled());
             _gatt.WriteDescriptor(descriptor);
-            await _descriptorWriteTcs.Task;
+            try
+            {
+                await _descriptorWriteTcs.Task;
+            }
+            finally
+            {
+                _descriptorWriteTcs = null;
+            }
         }
 
         if (enable && handler != null)
@@ -324,6 +381,17 @@ public class AndroidBleDevice : IBleDevice
     {
         if (_disposed) return;
         _disposed = true;
+
+        _gattCallback.ConnectionStateChanged -= OnConnectionStateChanged;
+        _gattCallback.ServicesDiscovered -= OnServicesDiscovered;
+        _gattCallback.CharacteristicRead -= OnCharacteristicRead;
+        _gattCallback.CharacteristicWritten -= OnCharacteristicWritten;
+        _gattCallback.CharacteristicChanged -= OnCharacteristicChanged;
+        _gattCallback.DescriptorWritten -= OnDescriptorWritten;
+        _gattCallback.MtuChanged -= OnMtuChanged;
+
+        FailPendingOperations(new ObjectDisposedException(nameof(AndroidBleDevice)));
+
         var gatt = _gatt;
         _gatt = null;
         _services = null;
@@ -355,6 +423,71 @@ public class AndroidBleDevice : IBleDevice
 
         _stateSubject.OnCompleted();
         _stateSubject.Dispose();
+    }
+
+    private bool ShouldHandleGatt(BluetoothGatt gatt)
+        => !_disposed && _gatt != null && ReferenceEquals(gatt, _gatt);
+
+    private void PublishState(BleDeviceState state)
+    {
+        _state = state;
+
+        if (_disposed)
+            return;
+
+        try
+        {
+            _stateSubject.OnNext(state);
+        }
+        catch (ObjectDisposedException)
+        {
+        }
+    }
+
+    private void ThrowIfDisposed()
+    {
+        ObjectDisposedException.ThrowIf(_disposed, this);
+    }
+
+    private void FailPendingOperations(Exception ex)
+    {
+        _connectionTcs?.TrySetException(ex);
+        _disconnectTcs?.TrySetException(ex);
+        _serviceDiscoveryTcs?.TrySetException(ex);
+        _readTcs?.TrySetException(ex);
+        _writeTcs?.TrySetException(ex);
+        _descriptorWriteTcs?.TrySetException(ex);
+        _mtuTcs?.TrySetException(ex);
+    }
+
+    private static void CloseGatt(BluetoothGatt? gatt, bool disconnectFirst)
+    {
+        if (gatt == null)
+            return;
+
+        if (disconnectFirst)
+        {
+            try
+            {
+                gatt.Disconnect();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error while disconnecting Bluetooth GATT: {ex}");
+            }
+        }
+
+        TryRefreshGatt(gatt);
+
+        try
+        {
+            gatt.Close();
+            gatt.Dispose();
+        }
+        catch (Exception ex)
+        {
+            System.Diagnostics.Debug.WriteLine($"Error while closing Bluetooth GATT: {ex}");
+        }
     }
 
     private static void TryRefreshGatt(BluetoothGatt? gatt)

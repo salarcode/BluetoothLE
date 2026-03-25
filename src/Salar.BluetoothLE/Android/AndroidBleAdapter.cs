@@ -143,10 +143,22 @@ public class AndroidBleAdapter : BleAdapterBase
 
         config ??= ConnectionConfig.Default;
 
-        AndroidBleDevice device;
+        AndroidBleDevice? device = null;
+        AndroidBleDevice? staleDevice = null;
+        var trackLifecycle = false;
         lock (_cacheLock)
         {
-            if (!_deviceCache.TryGetValue(address, out device!))
+            if (_deviceCache.TryGetValue(address, out device!))
+            {
+                if (device.IsDisposed || device.State is BleDeviceState.Disconnected or BleDeviceState.Disconnecting or BleDeviceState.Failed)
+                {
+                    staleDevice = device;
+                    _deviceCache.Remove(address);
+                    device = null!;
+                }
+            }
+
+            if (device == null)
             {
                 var nativeDevice = _bluetoothAdapter.GetRemoteDevice(address);
                 if (nativeDevice == null)
@@ -154,36 +166,40 @@ public class AndroidBleAdapter : BleAdapterBase
 
                 device = new AndroidBleDevice(nativeDevice, _context);
                 _deviceCache[address] = device;
+                trackLifecycle = true;
             }
         }
+
+        staleDevice?.Dispose();
+
+        if (trackLifecycle)
+            TrackDeviceLifecycle(address, device);
+
+        if (device.State == BleDeviceState.Connected)
+        {
+            AddConnectedDevice(device);
+            return device;
+        }
+
+        if (device.State == BleDeviceState.Connecting)
+            throw new BleException(BleErrorCode.ConnectionFailed, $"A connection is already in progress for device '{address}'.");
 
         LibraryState = BleLibraryState.Connecting;
         try
         {
             await device.ConnectInternalAsync(config, cancellationToken);
             AddConnectedDevice(device);
-
-            // Auto-remove from the connected list and device cache whenever the
-            // device disconnects — whether the disconnect was requested or
-            // unexpected (e.g. device moved out of range).  The subscription
-            // disposes itself once it fires so there is no permanent reference
-            // keeping the device alive (fixes memory leak on repeated connects).
-            IDisposable? stateChangedSub = null;
-            stateChangedSub = device.StateChanged.Subscribe(state =>
-            {
-                if (state is BleDeviceState.Disconnected or BleDeviceState.Failed)
-                {
-                    RemoveConnectedDevice(device);
-                    lock (_cacheLock)
-                        _deviceCache.Remove(address);
-                    stateChangedSub?.Dispose();
-                    stateChangedSub = null;
-                    device.Dispose();
-                }
-            });
         }
         catch
         {
+            RemoveConnectedDevice(device);
+            lock (_cacheLock)
+            {
+                if (_deviceCache.TryGetValue(address, out var cachedDevice) && ReferenceEquals(cachedDevice, device))
+                    _deviceCache.Remove(address);
+            }
+
+            device.Dispose();
             LibraryState = BleLibraryState.Idle;
             throw;
         }
@@ -194,18 +210,55 @@ public class AndroidBleAdapter : BleAdapterBase
     /// <summary>
     /// Reconnects to a previously known BLE device.
     /// </summary>
-    public override Task<IBleDevice> ReconnectAsync(string address, ConnectionConfig? config = null, CancellationToken cancellationToken = default)
+    public override async Task<IBleDevice> ReconnectAsync(string address, ConnectionConfig? config = null, CancellationToken cancellationToken = default)
     {
         RemoveConnectedDevice(address);
+        AndroidBleDevice? existing = null;
         lock (_cacheLock)
         {
-            if (_deviceCache.TryGetValue(address, out var existing))
+            if (_deviceCache.TryGetValue(address, out var cachedDevice))
             {
-                existing.Dispose();
                 _deviceCache.Remove(address);
+                existing = cachedDevice;
             }
         }
-        return ConnectAsync(address, config, cancellationToken);
+
+        if (existing != null)
+        {
+            try
+            {
+                await existing.DisconnectAsync(cancellationToken);
+            }
+            catch
+            {
+            }
+
+            existing.Dispose();
+        }
+
+        return await ConnectAsync(address, config, cancellationToken);
+    }
+
+    private void TrackDeviceLifecycle(string address, AndroidBleDevice device)
+    {
+        IDisposable? stateChangedSub = null;
+        stateChangedSub = device.StateChanged.Subscribe(state =>
+        {
+            if (state is not (BleDeviceState.Disconnected or BleDeviceState.Failed))
+                return;
+
+            RemoveConnectedDevice(device);
+
+            lock (_cacheLock)
+            {
+                if (_deviceCache.TryGetValue(address, out var cachedDevice) && ReferenceEquals(cachedDevice, device))
+                    _deviceCache.Remove(address);
+            }
+
+            stateChangedSub?.Dispose();
+            stateChangedSub = null;
+            device.Dispose();
+        });
     }
 
     private static ScanMode ToAndroidScanModeLE(Core.Models.ScanMode mode) => mode switch

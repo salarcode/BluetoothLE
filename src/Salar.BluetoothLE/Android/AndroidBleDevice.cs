@@ -30,7 +30,7 @@ public class AndroidBleDevice : IBleDevice
     private TaskCompletionSource<int>? _mtuTcs;
     private static readonly TimeSpan DisconnectSettleDelay = TimeSpan.FromMilliseconds(300);
 
-    private readonly Dictionary<Guid, Action<byte[]>> _notificationHandlers = new();
+    private readonly Dictionary<Guid, Action<byte[]>> _notificationHandlers = [];
     private List<IBleService>? _services;
 
     internal bool IsDisposed => _disposed;
@@ -196,7 +196,7 @@ public class AndroidBleDevice : IBleDevice
         }
 
         _serviceDiscoveryTcs = new TaskCompletionSource<bool>(TaskCreationOptions.RunContinuationsAsynchronously);
-        _gatt.DiscoverServices();
+        _ = _gatt.DiscoverServices();
         await _serviceDiscoveryTcs.Task;
         _serviceDiscoveryTcs = null;
 

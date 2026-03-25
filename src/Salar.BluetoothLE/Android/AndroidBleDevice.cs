@@ -170,13 +170,17 @@ public class AndroidBleDevice : IBleDevice
 
         _gatt = _nativeDevice.ConnectGatt(_context, config.AutoConnect, _gattCallback);
         if (_gatt == null)
+        {
+            _connectionTcs = null;
             throw new BleException(BleErrorCode.ConnectionFailed, "ConnectGatt returned null.");
+        }
 
         var timeoutTask = Task.Delay(config.ConnectionTimeout, cancellationToken);
         var completedTask = await Task.WhenAny(_connectionTcs.Task, timeoutTask);
 
         if (completedTask == timeoutTask)
         {
+            _connectionTcs = null;
             CloseGatt(_gatt, disconnectFirst: true);
             _gatt = null;
             throw new BleException(BleErrorCode.ConnectionTimeout);

@@ -10,6 +10,7 @@ namespace BleAvaloniaDemo.Android;
 
 internal static class AndroidPermissionService
 {
+    // Arbitrary app-local request code used to correlate the Bluetooth permission callback.
     private const int BluetoothPermissionRequestCode = 4107;
     private static TaskCompletionSource<bool>? _pendingRequest;
 

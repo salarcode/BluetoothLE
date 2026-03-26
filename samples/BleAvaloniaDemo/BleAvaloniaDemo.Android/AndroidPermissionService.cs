@@ -16,7 +16,7 @@ internal static class AndroidPermissionService
 
     public static Task<bool> RequestBluetoothAccessAsync(Activity activity)
     {
-        var requiredPermissions = GetRequiredPermissions()
+        var requiredPermissions = GetRequiredPermissionsLimited()
             .Where(permission => ContextCompat.CheckSelfPermission(activity, permission) != Permission.Granted)
             .Distinct()
             .ToArray();
@@ -50,12 +50,13 @@ internal static class AndroidPermissionService
         pendingRequest.TrySetResult(granted);
     }
 
-    private static IEnumerable<string> GetRequiredPermissions()
+    private static IEnumerable<string> GetRequiredPermissionsLimited()
     {
         if (Build.VERSION.SdkInt >= BuildVersionCodes.S)
         {
             yield return global::Android.Manifest.Permission.BluetoothScan;
             yield return global::Android.Manifest.Permission.BluetoothConnect;
+            yield return global::Android.Manifest.Permission.AccessFineLocation;
             yield break;
         }
 

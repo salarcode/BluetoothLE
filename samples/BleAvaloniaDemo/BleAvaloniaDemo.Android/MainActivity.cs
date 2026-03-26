@@ -8,7 +8,6 @@ using Salar.BluetoothLE.Android;
 namespace BleAvaloniaDemo.Android
 {
     [Activity(
-        Label = "BleAvaloniaDemo.Android",
         Theme = "@style/MyTheme.NoActionBar",
         Icon = "@drawable/icon",
         MainLauncher = true,

@@ -1,6 +1,6 @@
 using Android.App;
 
-// Note: this file needs to be compied to `/Platforms/Android/AndroidPermissions.cs` of you app
+// Note: copy this file to `/Platforms/Android/AndroidPermissions.cs` in your app.
 
 [assembly: UsesPermission(Android.Manifest.Permission.AccessCoarseLocation)]
 [assembly: UsesPermission(Android.Manifest.Permission.AccessFineLocation)]

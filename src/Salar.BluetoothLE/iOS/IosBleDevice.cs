@@ -34,6 +34,7 @@ public class IosBleDevice : IBleDevice
     public BleDeviceState State => _state;
     public int Mtu => _mtu;
     public IObservable<BleDeviceState> StateChanged => _stateSubject;
+    internal CBPeripheral Peripheral => _peripheral;
 
     /// <summary>
     /// Initializes a new IosBleDevice instance.
@@ -209,6 +210,9 @@ public class IosBleDevice : IBleDevice
     /// </summary>
     public Task<int> RequestMtuAsync(int mtu, CancellationToken cancellationToken = default)
     {
+        // CoreBluetooth negotiates the ATT MTU automatically, so the requested
+        // value cannot be forced from app code. Return the currently available
+        // maximum write length instead.
         _mtu = (int)_peripheral.GetMaximumWriteValueLength(CBCharacteristicWriteType.WithResponse);
         return Task.FromResult(_mtu);
     }

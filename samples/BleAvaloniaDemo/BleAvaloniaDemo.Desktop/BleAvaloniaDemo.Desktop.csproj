@@ -4,8 +4,10 @@
     <!--If you are willing to use Windows/MacOS native APIs you will need to create 3 projects.
     One for Windows with net9.0-windows TFM, one for MacOS with net9.0-macos and one with net9.0 TFM for Linux.-->
     <TargetFramework>net9.0</TargetFramework>
+    <TargetFramework Condition="$([MSBuild]::IsOSPlatform('windows'))">net9.0-windows10.0.19041.0</TargetFramework>
     <Nullable>enable</Nullable>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
+    <EnableWindowsTargeting Condition="!$([MSBuild]::IsOSPlatform('windows'))">true</EnableWindowsTargeting>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -20,5 +22,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\BleAvaloniaDemo\BleAvaloniaDemo.csproj" />
+    <ProjectReference Include="..\..\..\src\Salar.BluetoothLE\Salar.BluetoothLE.csproj" />
   </ItemGroup>
 </Project>

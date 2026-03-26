@@ -24,11 +24,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\BleAvaloniaDemo\BleAvaloniaDemo.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Compile Update="AndroidPermissions.cs">
-      <ExcludeFromCurrentConfiguration>false</ExcludeFromCurrentConfiguration>
-    </Compile>
+    <ProjectReference Include="..\..\..\src\Salar.BluetoothLE\Salar.BluetoothLE.csproj" />
   </ItemGroup>
 </Project>

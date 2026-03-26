@@ -12,5 +12,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\BleAvaloniaDemo\BleAvaloniaDemo.csproj" />
+    <ProjectReference Include="..\..\..\src\Salar.BluetoothLE\Salar.BluetoothLE.csproj" />
   </ItemGroup>
 </Project>

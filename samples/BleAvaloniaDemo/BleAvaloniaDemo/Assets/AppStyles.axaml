@@ -1,0 +1,87 @@
+<Styles xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <Styles.Resources>
+        <SolidColorBrush x:Key="BrandBrush"        Color="#512BD4" />
+        <SolidColorBrush x:Key="StatusGreenBrush"  Color="#22C55E" />
+        <SolidColorBrush x:Key="StatusBlueBrush"   Color="#3B82F6" />
+        <SolidColorBrush x:Key="StatusGrayBrush"   Color="#9CA3AF" />
+        <SolidColorBrush x:Key="StatusRedBrush"    Color="#EF4444" />
+    </Styles.Resources>
+
+    <Style Selector="Border.card">
+        <Setter Property="CornerRadius"    Value="12" />
+        <Setter Property="Padding"         Value="16" />
+        <Setter Property="Background"      Value="{DynamicResource ExpanderBackground}" />
+        <Setter Property="BoxShadow"       Value="0 2 10 0 #0F000000" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="BorderBrush"     Value="{DynamicResource SystemControlForegroundBaseLowBrush}" />
+    </Style>
+
+    <Style Selector="Border.list-row">
+        <Setter Property="Padding"    Value="16,12" />
+        <Setter Property="Background" Value="Transparent" />
+        <Setter Property="Transitions">
+            <Transitions>
+                <BrushTransition Property="Background" Duration="0:0:0.12" />
+            </Transitions>
+        </Setter>
+    </Style>
+    <Style Selector="Border.list-row:pointerover">
+        <Setter Property="Background" Value="{DynamicResource SystemControlBackgroundBaseLowBrush}" />
+    </Style>
+
+    <Style Selector="TextBlock.section-label">
+        <Setter Property="FontSize"   Value="11" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+        <Setter Property="Opacity"    Value="0.5" />
+    </Style>
+
+    <Style Selector="TextBlock.page-title">
+        <Setter Property="FontSize"   Value="22" />
+        <Setter Property="FontWeight" Value="SemiBold" />
+    </Style>
+
+    <Style Selector="Border.badge">
+        <Setter Property="CornerRadius"    Value="20" />
+        <Setter Property="Padding"         Value="10,4" />
+        <Setter Property="Background"      Value="{DynamicResource SystemControlBackgroundBaseLowBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="BorderBrush"     Value="{DynamicResource SystemControlForegroundBaseLowBrush}" />
+    </Style>
+
+    <Style Selector="Border.chip">
+        <Setter Property="CornerRadius"    Value="8" />
+        <Setter Property="Padding"         Value="12,8" />
+        <Setter Property="Background"      Value="{DynamicResource SystemControlBackgroundBaseLowBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="BorderBrush"     Value="{DynamicResource SystemControlForegroundBaseLowBrush}" />
+        <Setter Property="Margin"          Value="0,0,8,8" />
+    </Style>
+
+    <Style Selector="Button.action">
+        <Setter Property="CornerRadius" Value="8" />
+        <Setter Property="Padding"      Value="16,9" />
+        <Setter Property="Margin"       Value="0,0,8,0" />
+    </Style>
+
+    <Style Selector="Border.feedback">
+        <Setter Property="CornerRadius"    Value="8" />
+        <Setter Property="Padding"         Value="12,9" />
+        <Setter Property="Background"      Value="{DynamicResource SystemControlBackgroundBaseLowBrush}" />
+        <Setter Property="BorderThickness" Value="1" />
+        <Setter Property="BorderBrush"     Value="{DynamicResource SystemControlForegroundBaseLowBrush}" />
+    </Style>
+
+    <Style Selector="Rectangle.divider">
+        <Setter Property="Height"  Value="1" />
+        <Setter Property="Opacity" Value="0.12" />
+        <Setter Property="Fill"    Value="{DynamicResource SystemControlForegroundBaseHighBrush}" />
+    </Style>
+
+    <Style Selector="TextBlock.mono">
+        <Setter Property="FontFamily" Value="Cascadia Code, Consolas, Courier New" />
+        <Setter Property="FontSize"   Value="12" />
+    </Style>
+
+</Styles>

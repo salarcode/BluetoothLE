@@ -2,15 +2,237 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             xmlns:vm="clr-namespace:BleAvaloniaDemo.ViewModels"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
+             mc:Ignorable="d"
+             d:DesignWidth="480"
+             d:DesignHeight="900"
              x:Class="BleAvaloniaDemo.Views.MainView"
-             x:DataType="vm:MainViewModel">
-  <Design.DataContext>
-    <!-- This only sets the DataContext for the previewer in an IDE,
-         to set the actual DataContext for runtime, set the DataContext property in code (look at App.axaml.cs) -->
-    <vm:MainViewModel />
-  </Design.DataContext>
+             x:CompileBindings="False">
 
-  <TextBlock Text="{Binding Greeting}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+  <ScrollViewer HorizontalScrollBarVisibility="Disabled">
+    <StackPanel Margin="20,20,20,36" Spacing="20">
+
+      <!-- ── Header ── -->
+      <Grid ColumnDefinitions="*,Auto" VerticalAlignment="Center">
+        <StackPanel Spacing="2">
+          <TextBlock Classes="page-title" Text="BLE Demo" />
+          <TextBlock Text="Bluetooth Low Energy · Avalonia" FontSize="13" Opacity=".5" />
+        </StackPanel>
+        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" VerticalAlignment="Center">
+          <Border Classes="badge">
+            <TextBlock x:Name="AdapterStateLabel" Text="Unknown" FontSize="12" />
+          </Border>
+          <Border Classes="badge">
+            <TextBlock x:Name="LibraryStateLabel" Text="Idle" FontSize="12" />
+          </Border>
+        </StackPanel>
+      </Grid>
+
+      <!-- ── Status chips ── -->
+      <Border Classes="card" Padding="8">
+        <WrapPanel Orientation="Horizontal">
+          <Border Classes="chip">
+            <StackPanel Spacing="2">
+              <TextBlock Classes="section-label" Text="PERMISSION" />
+              <TextBlock x:Name="PermissionStatusLabel" Text="Unknown" FontSize="13" FontWeight="Medium" />
+            </StackPanel>
+          </Border>
+          <Border Classes="chip">
+            <StackPanel Spacing="2">
+              <TextBlock Classes="section-label" Text="CONNECTED" />
+              <TextBlock x:Name="ConnectedCountLabel" Text="0" FontSize="13" FontWeight="Medium" />
+            </StackPanel>
+          </Border>
+          <Border Classes="chip">
+            <StackPanel Spacing="2">
+              <TextBlock Classes="section-label" Text="SELECTED" />
+              <TextBlock x:Name="SelectedDeviceLabel" Text="None" FontSize="13" FontWeight="Medium" />
+            </StackPanel>
+          </Border>
+        </WrapPanel>
+      </Border>
+
+      <!-- ── Actions ── -->
+      <WrapPanel Orientation="Horizontal">
+        <Button Classes="action accent"
+                Content="Request Access"
+                Click="OnRequestAccessClicked"
+                Margin="0,0,8,8" />
+        <Button x:Name="ScanButton"
+                Classes="action accent"
+                Content="Start Scan"
+                Click="OnScanClicked"
+                Margin="0,0,8,8" />
+        <Button x:Name="StopScanButton"
+                Classes="action"
+                Content="Stop Scan"
+                Click="OnStopScanClicked"
+                Margin="0,0,8,8" />
+        <Button Classes="action"
+                Content="Refresh Connected"
+                Click="OnRefreshConnectedClicked"
+                Margin="0,0,0,8" />
+      </WrapPanel>
+
+      <!-- ── Busy / Feedback ── -->
+      <StackPanel Spacing="6">
+        <ProgressBar x:Name="BusyIndicator"
+                     IsVisible="False"
+                     IsIndeterminate="True"
+                     Height="3"
+                     CornerRadius="2" />
+        <Border Classes="feedback">
+          <TextBlock x:Name="FeedbackLabel"
+                     Text="Ready to scan for nearby BLE devices."
+                     FontSize="13"
+                     TextWrapping="Wrap" />
+        </Border>
+      </StackPanel>
+
+      <!-- ── Discovered devices ── -->
+      <StackPanel Spacing="8">
+        <TextBlock Classes="section-label" Text="DISCOVERED DEVICES" />
+        <Border Classes="card" Padding="0">
+          <StackPanel>
+            <Border Classes="list-row">
+              <TextBlock x:Name="NoScanResultsLabel"
+                         Text="No devices found. Start a scan to discover nearby BLE devices."
+                         Opacity=".55"
+                         TextWrapping="Wrap" />
+            </Border>
+            <ItemsControl x:Name="ScanResultsView">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <Border Classes="list-row"
+                          BorderThickness="0,1,0,0"
+                          BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+                    <Grid ColumnDefinitions="*,Auto" VerticalAlignment="Center">
+                      <StackPanel Spacing="2">
+                        <TextBlock Text="{Binding DisplayName}"
+                                   FontWeight="SemiBold"
+                                   FontSize="14" />
+                        <TextBlock Text="{Binding Address}"
+                                   FontSize="11"
+                                   Opacity=".55" />
+                        <TextBlock Text="{Binding SignalSummary}"
+                                   FontSize="11"
+                                   Opacity=".4" />
+                      </StackPanel>
+                      <Button Grid.Column="1"
+                              Classes="accent"
+                              CornerRadius="8"
+                              Padding="14,7"
+                              Content="Connect"
+                              IsEnabled="{Binding IsConnectable}"
+                              Click="OnConnectToScanResultClicked"
+                              VerticalAlignment="Center" />
+                    </Grid>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </Border>
+      </StackPanel>
+
+      <!-- ── Connected devices ── -->
+      <StackPanel Spacing="8">
+        <TextBlock Classes="section-label" Text="CONNECTED DEVICES" />
+        <Border Classes="card" Padding="0">
+          <StackPanel>
+            <Border Classes="list-row">
+              <TextBlock x:Name="NoConnectedDevicesLabel"
+                         Text="No connected devices."
+                         Opacity=".55" />
+            </Border>
+            <ItemsControl x:Name="ConnectedDevicesView">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <Border Classes="list-row"
+                          BorderThickness="0,1,0,0"
+                          BorderBrush="{DynamicResource SystemControlForegroundBaseLowBrush}">
+                    <Grid ColumnDefinitions="*,Auto" VerticalAlignment="Center">
+                      <StackPanel Spacing="2">
+                        <TextBlock Text="{Binding DisplayName}"
+                                   FontWeight="SemiBold"
+                                   FontSize="14" />
+                        <TextBlock Text="{Binding Address}"
+                                   FontSize="11"
+                                   Opacity=".55" />
+                        <TextBlock Text="{Binding State}"
+                                   FontSize="11"
+                                   Opacity=".4" />
+                      </StackPanel>
+                      <Button Grid.Column="1"
+                              CornerRadius="8"
+                              Padding="14,7"
+                              Content="Inspect"
+                              Click="OnInspectConnectedDeviceClicked"
+                              VerticalAlignment="Center" />
+                    </Grid>
+                  </Border>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </Border>
+      </StackPanel>
+
+      <!-- ── Selected device ── -->
+      <StackPanel Spacing="8">
+        <TextBlock Classes="section-label" Text="SELECTED DEVICE" />
+        <Border Classes="card">
+          <StackPanel Spacing="16">
+
+            <Grid ColumnDefinitions="80,*" RowDefinitions="Auto,Auto">
+              <TextBlock Grid.Row="0" Text="Device" FontSize="12" Opacity=".5" VerticalAlignment="Center" />
+              <TextBlock x:Name="SelectedDeviceStateLabel"
+                         Grid.Row="0" Grid.Column="1"
+                         Text="None"
+                         FontWeight="Medium"
+                         TextWrapping="Wrap" />
+              <TextBlock Grid.Row="1" Text="Signal" FontSize="12" Opacity=".5" VerticalAlignment="Center" Margin="0,8,0,0" />
+              <TextBlock x:Name="SignalLabel"
+                         Grid.Row="1" Grid.Column="1"
+                         Text="Unavailable"
+                         FontWeight="Medium"
+                         Margin="0,8,0,0" />
+            </Grid>
+
+            <Rectangle Classes="divider" />
+
+            <WrapPanel Orientation="Horizontal">
+              <Button x:Name="LoadServicesButton"
+                      Classes="action"
+                      Content="List GATT Services"
+                      Click="OnLoadServicesClicked" />
+              <Button x:Name="DisconnectButton"
+                      Classes="action"
+                      Content="Disconnect"
+                      Click="OnDisconnectClicked"
+                      Margin="0" />
+            </WrapPanel>
+
+            <TextBlock x:Name="NoServicesLabel"
+                       Text="Select a device above and tap List GATT Services."
+                       Opacity=".55"
+                       FontSize="13"
+                       TextWrapping="Wrap" />
+
+            <ItemsControl x:Name="ServicesView">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate>
+                  <TextBlock Classes="mono"
+                             Text="{Binding .}"
+                             Margin="0,0,0,4"
+                             TextWrapping="Wrap" />
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+          </StackPanel>
+        </Border>
+      </StackPanel>
+
+    </StackPanel>
+  </ScrollViewer>
 </UserControl>

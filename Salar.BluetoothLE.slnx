@@ -6,6 +6,16 @@
     </Project>
     <Project Path="samples/BleSimulationDemo.Console/BleSimulationDemo.Console.csproj" />
   </Folder>
+  <Folder Name="/samples/Avalonia/">
+    <Project Path="samples/BleAvaloniaDemo/BleAvaloniaDemo.Android/BleAvaloniaDemo.Android.csproj" Id="e9855445-70e3-4054-82b8-e1a56db37eed">
+      <Deploy />
+    </Project>
+    <Project Path="samples/BleAvaloniaDemo/BleAvaloniaDemo.Desktop/BleAvaloniaDemo.Desktop.csproj" Id="1a50a70c-681b-4b15-8de2-0f83720ee4ed" />
+    <Project Path="samples/BleAvaloniaDemo/BleAvaloniaDemo.iOS/BleAvaloniaDemo.iOS.csproj" Id="dae8982e-0c95-4ece-89c1-f662369c5267">
+      <Deploy />
+    </Project>
+    <Project Path="samples/BleAvaloniaDemo/BleAvaloniaDemo/BleAvaloniaDemo.csproj" Id="e2d759ec-7002-48f5-865d-56cd5b010a89" />
+  </Folder>
   <Folder Name="/src/">
     <Project Path="src/Salar.BluetoothLE.Maui/Salar.BluetoothLE.Maui.csproj" />
     <Project Path="src/Salar.BluetoothLE/Salar.BluetoothLE.csproj" />

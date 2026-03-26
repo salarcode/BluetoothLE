@@ -4,6 +4,7 @@
     <Nullable>enable</Nullable>
     <LangVersion>latest</LangVersion>
     <AvaloniaUseCompiledBindingsByDefault>true</AvaloniaUseCompiledBindingsByDefault>
+    <BluetoothLETargetFrameworksOverride>net9.0</BluetoothLETargetFrameworksOverride>
   </PropertyGroup>
   
   <ItemGroup>

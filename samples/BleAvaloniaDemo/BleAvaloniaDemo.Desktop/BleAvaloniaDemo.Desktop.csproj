@@ -8,6 +8,7 @@
     <Nullable>enable</Nullable>
     <BuiltInComInteropSupport>true</BuiltInComInteropSupport>
     <EnableWindowsTargeting Condition="!$([MSBuild]::IsOSPlatform('windows'))">true</EnableWindowsTargeting>
+    <BluetoothLETargetFrameworksOverride>$(TargetFramework)</BluetoothLETargetFrameworksOverride>
   </PropertyGroup>
 
   <PropertyGroup>

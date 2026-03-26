@@ -16,7 +16,7 @@
       <Border Padding="14" BorderThickness="1" BorderBrush="{DynamicResource ThemeBorderMidBrush}">
         <StackPanel Spacing="8">
           <TextBlock Text="Adapter status" FontWeight="Bold" />
-          <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto" ColumnSpacing="10" RowSpacing="6">
+          <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto,Auto,Auto,Auto">
             <TextBlock Grid.Row="0" Text="Permission:" />
             <TextBlock x:Name="PermissionStatusLabel" Grid.Row="0" Grid.Column="1" Text="Unknown" />
             <TextBlock Grid.Row="1" Text="Bluetooth:" />
@@ -53,7 +53,7 @@
             <ItemsControl.ItemTemplate>
               <DataTemplate>
                 <Border Margin="0,0,0,8" Padding="12" BorderThickness="1" BorderBrush="{DynamicResource ThemeBorderLowBrush}">
-                  <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                  <Grid ColumnDefinitions="*,Auto">
                     <StackPanel Spacing="4">
                       <TextBlock Text="{Binding DisplayName}" FontWeight="Bold" />
                       <TextBlock Text="{Binding Address}" FontSize="12" />
@@ -79,7 +79,7 @@
             <ItemsControl.ItemTemplate>
               <DataTemplate>
                 <Border Margin="0,0,0,8" Padding="12" BorderThickness="1" BorderBrush="{DynamicResource ThemeBorderLowBrush}">
-                  <Grid ColumnDefinitions="*,Auto" ColumnSpacing="10">
+                  <Grid ColumnDefinitions="*,Auto">
                     <StackPanel Spacing="4">
                       <TextBlock Text="{Binding DisplayName}" FontWeight="Bold" />
                       <TextBlock Text="{Binding Address}" FontSize="12" />
@@ -99,7 +99,7 @@
       <Border Padding="14" BorderThickness="1" BorderBrush="{DynamicResource ThemeBorderMidBrush}">
         <StackPanel Spacing="10">
           <TextBlock Text="Selected device details" FontWeight="Bold" />
-          <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto" ColumnSpacing="10" RowSpacing="6">
+          <Grid ColumnDefinitions="Auto,*" RowDefinitions="Auto,Auto">
             <TextBlock Grid.Row="0" Text="Device:" />
             <TextBlock x:Name="SelectedDeviceStateLabel" Grid.Row="0" Grid.Column="1" Text="None" TextWrapping="Wrap" />
             <TextBlock Grid.Row="1" Text="Signal:" />

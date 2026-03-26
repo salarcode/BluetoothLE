@@ -4,7 +4,7 @@ using Salar.BluetoothLE;
 
 namespace BleAvaloniaDemo;
 
-internal static class BleDemoPlatformServices
+public static class BleDemoPlatformServices
 {
     public static Func<IBleAdapter>? CreateAdapter { get; private set; }
 

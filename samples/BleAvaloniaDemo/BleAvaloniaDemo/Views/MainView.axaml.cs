@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Linq;
 using System.Threading.Tasks;
+using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
 using Avalonia.Threading;
@@ -62,6 +63,14 @@ public partial class MainView : UserControl
 
         UpdateStatus();
         UpdateSelectedDeviceDetails();
+    }
+
+    protected override void OnDetachedFromVisualTree(VisualTreeAttachmentEventArgs e)
+    {
+        _scanSubscription?.Dispose();
+        _adapterStateSubscription?.Dispose();
+        _libraryStateSubscription?.Dispose();
+        base.OnDetachedFromVisualTree(e);
     }
 
     private void OnScanResultReceived(ScanResult result)

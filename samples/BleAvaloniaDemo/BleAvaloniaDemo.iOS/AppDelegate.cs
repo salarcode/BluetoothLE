@@ -3,6 +3,7 @@ using Avalonia.Controls;
 using Avalonia.iOS;
 using Avalonia.Media;
 using Foundation;
+using Salar.BluetoothLE.iOS;
 using UIKit;
 
 namespace BleAvaloniaDemo.iOS
@@ -17,6 +18,8 @@ namespace BleAvaloniaDemo.iOS
     {
         protected override AppBuilder CustomizeAppBuilder(AppBuilder builder)
         {
+            BleDemoPlatformServices.Initialize(static () => new IosBleAdapter());
+
             return base.CustomizeAppBuilder(builder)
                 .WithInterFont();
         }

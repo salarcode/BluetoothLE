@@ -1,3 +1,5 @@
+using System;
+using System.Threading.Tasks;
 using Salar.BluetoothLE;
 
 namespace BleAvaloniaDemo;
